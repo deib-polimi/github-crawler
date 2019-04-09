@@ -18,7 +18,7 @@ class Crawler:
         results, total = self.__getQueryResults__(query)
         print(search.name, total)
         r = 0
-        while r < 1:
+        while r < total:
             print('Processing result', r+1)
             try:
                 result = results[r]
