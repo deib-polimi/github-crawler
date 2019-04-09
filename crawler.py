@@ -4,8 +4,8 @@ from time import sleep
 import sys
 
 class Crawler:
-    short_timeout = 5
-    long_timeout = 5*60*1000
+    short_timeout = 1
+    long_timeout = 60*1000
 
     def __init__(self, tokens):
         self.tokens = tokens
