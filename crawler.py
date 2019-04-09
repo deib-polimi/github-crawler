@@ -5,7 +5,7 @@ import sys
 
 class Crawler:
     short_timeout = 1
-    long_timeout = 600
+    long_timeout = 60
 
     def __init__(self, tokens):
         self.tokens = tokens
