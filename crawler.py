@@ -12,10 +12,13 @@ class Crawler:
         self.current_token = 0
         self.github = Github(tokens[0])
 
-    def search(self, search):
+    def search_code(self, search):
+        self.__search__(search, lambda g: g.search_code)
+
+    def __search__(self, search, f):
         repos = {}
         query = self.__buildQuery__(search)
-        results, total = self.__getQueryResults__(query)
+        results, total = self.__getQueryResults__(query, f)
         print(search.name, total)
         r = 0
         while r < total:
@@ -31,9 +34,9 @@ class Crawler:
             r += 1
         self.__writeToFile__(search.name, repos)
 
-    def __getQueryResults__(self, query):
+    def __getQueryResults__(self, query, f):
         try:
-            results = self.github.search_code(query)
+            results = f(self.github)(query)
             sleep(self.short_timeout)
             total = results.totalCount
         except GithubException:
@@ -67,31 +70,3 @@ class Crawler:
             output += ",".join(data) + "\n"
         f = open("results/%s.csv" % name, "w")
         f.write(output)
-
-class Search:
-    def __init__(self, name, text, more):
-        self.name = name
-        self.text = text
-        self.more = more
-
-
-f = open("tokens.txt", "r")
-tokens = f.read().splitlines()
-
-crawler = Crawler(tokens)
-crawler.search(Search("terraform", 'resource', {'extension': 'tf'}))
-crawler.search(Search("ansible", 'tasks', {'extension': 'yml'}))
-crawler.search(Search("puppet_1", 'class', {'extension': 'pp'}))
-crawler.search(Search("puppet_2", 'file', {'extension': 'pp'}))
-crawler.search(Search("chef", 'Cookbook', {'extension': 'rb'}))
-crawler.search(Search("cloudformation", 'AWSTemplateFormatVersion', {'extension': 'yml'}))
-crawler.search(Search("terraform", 'resource', {'extension': 'tf'}))
-crawler.search(Search("compose", 'services', {'extension': 'yml', 'filename': 'docker-compose'}))
-crawler.search(Search("kubernetes", 'spec', {'extension': 'yml', 'filename': 'deployments'}))
-crawler.search(Search("packer", 'variables+builders', {'extension': 'json'}))
-crawler.search(Search("vagrant", 'Vagrant', {'filename' : 'Vagrantfile'}))
-crawler.search(Search("cloudify", 'blueprint+nodes', {'extension': 'yml'}))
-crawler.search(Search("salt", 'pkg', {'extension': 'sls'}))
-crawler.search(Search("Vagrant", 'brooklyn', {'extension': 'yml'}))
-crawler.search(Search("tosca_1", 'node_types', {'extension': 'yml'}))
-crawler.search(Search("tosca_2", 'node_templates', {'extension': 'yml'}))
