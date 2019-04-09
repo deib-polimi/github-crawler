@@ -29,7 +29,7 @@ class Crawler:
                 sleep(self.short_timeout)
             except GithubException:
                 # fail, recompute result (with another token and start from the same item r)
-                results, total = self.__getQueryResults__(query)
+                results, total = self.__getQueryResults__(query, f)
                 continue
             r += 1
         self.__writeToFile__(search.name, repos)
@@ -41,7 +41,7 @@ class Crawler:
             total = results.totalCount
         except GithubException:
             self.__changeToken__()
-            return self.__getQueryResults__(query, getToken)
+            return self.__getQueryResults__(query, f)
         return (results, total)
 
     def __buildQuery__(self, search):
