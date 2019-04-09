@@ -2,6 +2,7 @@ from github import Github
 from github.GithubException import GithubException
 from time import sleep
 import sys
+import os
 
 class Crawler:
     short_timeout = 1
@@ -16,6 +17,8 @@ class Crawler:
         self.__search__(search, lambda g: g.search_code)
 
     def __search__(self, search, f):
+        if self.__checkFileExists__(search.name):
+            return
         repos = {}
         query = self.__buildQuery__(search)
         results, total = self.__getQueryResults__(query, f)
@@ -70,3 +73,6 @@ class Crawler:
             output += ",".join(data) + "\n"
         f = open("results/%s.csv" % name, "w")
         f.write(output)
+
+    def __checkFileExists__(self, name):
+        return os.path.isfile("results/%s.csv" % name)
