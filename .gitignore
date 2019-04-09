@@ -1,4 +1,4 @@
-results.csv
+results/*.csv
 tokens.txt
 # Created by https://www.gitignore.io/api/macos,python,virtualenv
 # Edit at https://www.gitignore.io/?templates=macos,python,virtualenv

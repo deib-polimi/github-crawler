@@ -3,114 +3,95 @@ from github.GithubException import GithubException
 from time import sleep
 import sys
 
-searches = [ \
-# terraform
-('resource', {'extension': 'tf'}), \
-# ansible
-('tasks', {'extension': 'yml'}), \
-# puppet
-('class', {'extension': 'pp'}), \
-('file', {'extension': 'pp'}), \
-# chef
-('Cookbook', {'extension': 'rb'}), \
-# cloudformation
-('AWSTemplateFormatVersion', {'extension': 'yml'}), \
-# compose
-('services', {'extension': 'yml', 'filename': 'docker-compose'}), \
-# kub
-('spec', {'extension': 'yml', 'filename': 'deployments'}), \
-# packer
-('variables+builders', {'extension': 'json'}), \
-# vagrant
-('Vagrant', {'filename' : 'Vagrantfile'}), \
-# cloudify
-('blueprint+nodes', {'extension': 'yml'}), \
-# salt
-('pkg', {'extension': 'sls'}), \
-# brooklyn
-('brooklyn', {'extension': 'yml'}), \
-# tosca
-('node_types', {'extension': 'yml'}), \
-('node_templates', {'extension': 'yml'}), \
-]
+class Crawler:
+    short_timeout = 5
+    long_timeout = 5*60*1000
 
-short_timeout = 5
-long_timeout = 5*60*1000
+    def __init__(self, tokens):
+        self.tokens = tokens
+        self.current_token = 0
+        self.github = Github(tokens[0])
+
+    def search(self, search):
+        repos = {}
+        query = self.__buildQuery__(search)
+        results, total = self.__getQueryResults__(query)
+        print(search.name, total)
+        r = 0
+        while r < 1:
+            print('Processing result', r+1)
+            try:
+                result = results[r]
+                self.__addResult__(result, repos)
+                sleep(self.short_timeout)
+            except GithubException:
+                # fail, recompute result (with another token and start from the same item r)
+                results, total = self.__getQueryResults__(query)
+                continue
+            r += 1
+        self.__writeToFile__(search.name, repos)
+
+    def __getQueryResults__(self, query):
+        try:
+            results = self.github.search_code(query)
+            sleep(self.short_timeout)
+            total = results.totalCount
+        except GithubException:
+            self.__changeToken__()
+            return self.__getQueryResults__(query, getToken)
+        return (results, total)
+
+    def __buildQuery__(self, search):
+        q = '%s in:file' % search.text
+        for key, value in search.more.items():
+            q += ' %s:%s' % (key, value)
+        return q
+
+    def __changeToken__(self):
+        self.current_token = (self.current_token + 1) % len(self.tokens)
+        if not self.current_token:
+            print('Waiting...')
+            sleep(self.long_timeout)
+        self.github = Github(self.tokens[self.current_token])
+
+    def __addResult__(self, result, repos):
+        repo = result.repository.git_url
+        files = repos.get(repo, set())
+        files.add(result.path)
+        repos[repo] = files
+
+    def __writeToFile__(self, name, repos):
+        output = ""
+        for url, files in repos.items():
+            data = [url] + list(files)
+            output += ",".join(data) + "\n"
+        f = open("results/%s.csv" % name, "w")
+        f.write(output)
+
+class Search:
+    def __init__(self, name, text, more):
+        self.name = name
+        self.text = text
+        self.more = more
+
 
 f = open("tokens.txt", "r")
 tokens = f.read().splitlines()
 
-
-def search(tokens, searches):
-    g = Github(tokens[0])
-    repos = {}
-    s = 0
-    while s < len(searches):
-        search = searches[s]
-        q = buildQuery(search)
-        try:
-            results = g.search_code(q)
-            sleep(short_timeout)
-            total = results.totalCount
-            print(search, total)
-        # if fails try with another token
-        except GithubException:
-            try:
-                # get another token
-                g = getToken(tokens)
-                results = g.search_code(q)
-            except:
-                print('Waiting...')
-                # if fails again wait for a long timeout and retry
-                sleep(long_timeout)
-                continue
-        i = 0
-        while i < total:
-            print('Processing result', i)
-            try:
-                result = results[i]
-            # if fails try with another token
-            except GithubException:
-                try:
-                    # get another token
-                    g = getToken(tokens)
-                    results = g.search_code(q)
-                    result = results[i]
-                except:
-                    print('Waiting...')
-                    # if fails again wait for a long timeout and retry
-                    sleep(long_timeout)
-                    continue
-            addResult(result, repos)
-            sleep(short_timeout)
-            i += 1
-        s += 1
-    return repos
-
-def buildQuery(search):
-    q = '%s in:file' % search[0]
-    for key, value in search[1].items():
-        q += ' %s:%s' % (key, value)
-    return q
-
-__t__ = 0
-def getToken(tokens):
-    __t__ = (__t__ + 1) % len(token)
-    return Github(tokens[__t__])
-
-
-def addResult(result, repos):
-    repo = result.repository.git_url
-    files = repos.get(repo, set())
-    files.add(result.path)
-    repos[repo] = files
-
-repos = search(tokens, searches)
-
-output = ""
-for url, files in repos.items():
-    data = [url] + list(files)
-    output += ",".join(data) + "\n"
-
-f = open("results.csv", "w")
-f.write(output)
+crawler = Crawler(tokens)
+crawler.search(Search("terraform", 'resource', {'extension': 'tf'}))
+crawler.search(Search("ansible", 'tasks', {'extension': 'yml'}))
+crawler.search(Search("puppet_1", 'class', {'extension': 'pp'}))
+crawler.search(Search("puppet_2", 'file', {'extension': 'pp'}))
+crawler.search(Search("chef", 'Cookbook', {'extension': 'rb'}))
+crawler.search(Search("cloudformation", 'AWSTemplateFormatVersion', {'extension': 'yml'}))
+crawler.search(Search("terraform", 'resource', {'extension': 'tf'}))
+crawler.search(Search("compose", 'services', {'extension': 'yml', 'filename': 'docker-compose'}))
+crawler.search(Search("kubernetes", 'spec', {'extension': 'yml', 'filename': 'deployments'}))
+crawler.search(Search("packer", 'variables+builders', {'extension': 'json'}))
+crawler.search(Search("vagrant", 'Vagrant', {'filename' : 'Vagrantfile'}))
+crawler.search(Search("cloudify", 'blueprint+nodes', {'extension': 'yml'}))
+crawler.search(Search("salt", 'pkg', {'extension': 'sls'}))
+crawler.search(Search("Vagrant", 'brooklyn', {'extension': 'yml'}))
+crawler.search(Search("tosca_1", 'node_types', {'extension': 'yml'}))
+crawler.search(Search("tosca_2", 'node_templates', {'extension': 'yml'}))
