@@ -18,12 +18,11 @@ class Crawler:
         self.maxSlots = maxWait//slot
 
     def search_code(self, search):
-        repos = self.__search__(search, lambda g: g.search_code)
-        self.__writeToFile__(search.name, repos)
+        self.__search__(search, lambda g: g.search_code)
 
     def __search__(self, search, f):
         if self.__checkFileExists__(search.name):
-            return {}
+            return
         repos = {}
         query = self.__buildQuery__(search)
         results, total = self.__getQueryResults__(query, f)
@@ -45,7 +44,7 @@ class Crawler:
                 # something bad happened return the current result
                 break
             r += 1
-        return repos
+        self.__writeToFile__(search.name, repos)
 
     def __getQueryResults__(self, query, f):
         try:

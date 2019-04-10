@@ -7,7 +7,7 @@ tokens = f.read().splitlines()
 pool = CrawlerPool(tokens, Crawler.search_code)
 
 pool.addSearch(Search("terraform", 'resource', {'extension': 'tf'}))
-pool.addSearch(Search("ansible", 'tasks', {'extension': 'yml'}))
+pool.addSearch(Search("ansible", 'hosts+tasks+name', {'extension': 'yml'}))
 pool.addSearch(Search("puppet_1", 'class', {'extension': 'pp'}))
 pool.addSearch(Search("puppet_2", 'file', {'extension': 'pp'}))
 pool.addSearch(Search("chef", 'Cookbook', {'extension': 'rb'}))
