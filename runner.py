@@ -28,7 +28,7 @@ searches.put(Search("packer", 'variables+builders', {'extension': 'json'}))
 searches.put(Search("vagrant", 'Vagrant', {'filename' : 'Vagrantfile'}))
 searches.put(Search("cloudify", 'blueprint+nodes', {'extension': 'yml'}))
 searches.put(Search("salt", 'pkg', {'extension': 'sls'}))
-searches.put(Search("Vagrant", 'brooklyn', {'extension': 'yml'}))
+searches.put(Search("broklyn", 'brooklyn', {'extension': 'yml'}))
 searches.put(Search("tosca_1", 'node_types', {'extension': 'yml'}))
 searches.put(Search("tosca_2", 'node_templates', {'extension': 'yml'}))
 
