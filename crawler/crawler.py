@@ -77,7 +77,7 @@ class Crawler:
         wait = n*self.slot
         if n > 1:
             print("waiting %.1f seconds..." % wait)
-        sleep(wait * n)
+        sleep(wait)
 
     def __addResult__(self, result, repos):
         repo = result.repository.git_url
