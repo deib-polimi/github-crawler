@@ -7,9 +7,9 @@ from random import randint
 
 DEFAULT_PATH = os.path.join(os.getcwd(), "results")
 
-# default: slot=0.1s, maxWait=10m
+# default: slot=0.1s, maxWait=1m
 class Crawler:
-    def __init__(self, token, slot=0.1, maxWait=600, path=DEFAULT_PATH):
+    def __init__(self, token, slot=0.1, maxWait=60, path=DEFAULT_PATH):
         self.token = token
         self.github = Github(token)
         self.fails = 0
@@ -73,7 +73,7 @@ class Crawler:
 
     def __wait__(self):
         n = randint(0, 2**self.fails - 1) # exponential backoff
-        n = min(max(1, n), self.maxSlots) # at least wait one slot, max ten minutes
+        n = min(max(1, n), self.maxSlots) # at least wait one slot, or max maxWait
         wait = n*self.slot
         if n > 1:
             print("waiting %.1f seconds..." % wait)
