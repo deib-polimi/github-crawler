@@ -3,47 +3,53 @@ from github.GithubException import GithubException
 from time import sleep
 import sys
 import os
+from random import randint
 
 class Crawler:
-    short_timeout = 1
-    long_timeout = 60
-
-    def __init__(self, tokens):
-        self.tokens = tokens
-        self.current_token = 0
-        self.github = Github(tokens[0])
+    def __init__(self, token, slot=0.1, maxWait=600):  # default: slot=0.1s, maxWait=10m
+        self.token = token
+        self.github = Github(token)
+        self.fails = 0
+        self.slot = slot
+        self.maxSlots = maxWait//slot
 
     def search_code(self, search):
-        self.__search__(search, lambda g: g.search_code)
+        repos = self.__search__(search, lambda g: g.search_code)
+        self.__writeToFile__(search.name, repos)
 
     def __search__(self, search, f):
         if self.__checkFileExists__(search.name):
-            return
+            return {}
         repos = {}
         query = self.__buildQuery__(search)
         results, total = self.__getQueryResults__(query, f)
         print(search.name, total)
         r = 0
-        while r < total:
+        while r < 100:
             print('Processing result', r+1)
             try:
                 result = results[r]
+                self.__requestCompleted__()
                 self.__addResult__(result, repos)
-                sleep(self.short_timeout)
+                self.__requestCompleted__()
             except GithubException:
-                # fail, recompute result (with another token and start from the same item r)
+                self.__requestFailed__()
+                # fail, recompute result and start from the same item r
                 results, total = self.__getQueryResults__(query, f)
                 continue
+            except:
+                # something bad happened return the current result
+                break
             r += 1
-        self.__writeToFile__(search.name, repos)
+        return repos
 
     def __getQueryResults__(self, query, f):
         try:
             results = f(self.github)(query)
-            sleep(self.short_timeout)
             total = results.totalCount
+            self.__requestCompleted__()
         except GithubException:
-            self.__changeToken__()
+            self.__requestFailed__()
             return self.__getQueryResults__(query, f)
         return (results, total)
 
@@ -53,12 +59,20 @@ class Crawler:
             q += ' %s:%s' % (key, value)
         return q
 
-    def __changeToken__(self):
-        self.current_token = (self.current_token + 1) % len(self.tokens)
-        if not self.current_token:
-            print('Waiting...')
-            sleep(self.long_timeout)
-        self.github = Github(self.tokens[self.current_token])
+    def __requestFailed__(self):
+        self.fails += 1
+        print("request failed at attempt", self.fails, "...retrying soon")
+        self.__wait__()
+
+    def __requestCompleted__(self):
+        self.fails //= 2
+        self.__wait__()
+
+    def __wait__(self):
+        n = randint(0, 2**self.fails - 1) # exponential backoff
+        n = min(max(1, n), self.maxSlots) # at least wait one slot, max ten minutes
+        print("Waiting", n, "slots")
+        sleep(self.slot * n)
 
     def __addResult__(self, result, repos):
         repo = result.repository.git_url
