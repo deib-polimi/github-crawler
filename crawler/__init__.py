@@ -1,3 +1,3 @@
 from .crawler import Crawler
-from .crawlers import Crawlers
+from .crawler_pool import CrawlerPool
 from .search import Search

@@ -3,7 +3,7 @@ import queue
 from crawler import Crawler
 from threading import Thread
 
-class Crawlers:
+class CrawlerPool:
     def __init__(self, tokens, f):
         self.searches = queue.Queue()
         self.tokens = tokens

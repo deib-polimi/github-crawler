@@ -5,9 +5,11 @@ from github.GithubException import GithubException
 from time import sleep
 from random import randint
 
+DEFAULT_PATH = os.path.join(os.getcwd(), "results")
 
+# default: slot=0.1s, maxWait=10m
 class Crawler:
-    def __init__(self, token, slot=0.1, maxWait=600, path=os.path.join(os.getcwd(), "results")):  # default: slot=0.1s, maxWait=10m
+    def __init__(self, token, slot=0.1, maxWait=600, path=DEFAULT_PATH):
         self.token = token
         self.github = Github(token)
         self.fails = 0
@@ -28,7 +30,7 @@ class Crawler:
         print(search.name, total)
         r = 0
         while r < total:
-            print('Processing result', r+1)
+            print(search.name, 'processing result', r+1)
             try:
                 result = results[r]
                 self.__requestCompleted__()
@@ -63,7 +65,7 @@ class Crawler:
 
     def __requestFailed__(self):
         self.fails += 1
-        print("request failed at attempt", self.fails, "...retrying soon")
+        print("request limit triggered", self.fails, "...retrying soon")
         self.__wait__()
 
     def __requestCompleted__(self):
@@ -73,8 +75,10 @@ class Crawler:
     def __wait__(self):
         n = randint(0, 2**self.fails - 1) # exponential backoff
         n = min(max(1, n), self.maxSlots) # at least wait one slot, max ten minutes
-        print("waiting", n, "slots...")
-        sleep(self.slot * n)
+        wait = n*self.slot
+        if n > 1:
+            print("waiting %.1f seconds..." % wait)
+        sleep(wait * n)
 
     def __addResult__(self, result, repos):
         repo = result.repository.git_url
