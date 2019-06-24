@@ -4,10 +4,10 @@ from crawler import Crawler
 from threading import Thread
 
 class CrawlerPool:
-    def __init__(self, tokens, f):
+    def __init__(self, tokens, crawlertype):
         self.searches = queue.Queue()
         self.tokens = tokens
-        self.f = f
+        self.crawlertype = crawlertype
         self.threads = [Thread(target=self.work, args=(t,)) for t in tokens]
 
     def addSearch(self, search):
@@ -25,10 +25,10 @@ class CrawlerPool:
             t.join()
 
     def work(self, token):
-        crawler = Crawler(token)
+        crawler = self.crawlertype(token)
         while True:
             item = self.searches.get()
             if item is None:
                 break
-            self.f(crawler, item)
+            crawler.search(item)
             self.searches.task_done()
