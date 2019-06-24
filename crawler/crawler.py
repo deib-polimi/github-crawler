@@ -19,10 +19,9 @@ class Crawler:
         self.maxSlots = maxWait//slot
 
     def __search__(self, search):
-        if self.__checkFileExists__(search.name):
-            return
         res = {}
         query = self.__buildQuery__(search)
+        print(query)
         results, total = self.__getQueryResults__(query)
         print(search.name, total)
         r = 0
@@ -33,7 +32,8 @@ class Crawler:
                 self.__requestCompleted__()
                 self.addResult(result, res)
                 self.__requestCompleted__()
-            except GithubException:
+            except GithubException as e:
+                print(e)
                 self.__requestFailed__()
                 # fail, recompute result and start from the same item r
                 results, total = self.__getQueryResults__(query)
@@ -50,7 +50,8 @@ class Crawler:
             results = self.executeQuery(query)
             total = results.totalCount
             self.__requestCompleted__()
-        except GithubException:
+        except GithubException as e:
+            print(e, query)
             self.__requestFailed__()
             return self.__getQueryResults__(query)
         return (results, total)
@@ -83,7 +84,7 @@ class Crawler:
         for url, files in res.items():
             data = [url] + list(files)
             output += ",".join(data) + "\n"
-        f = open(self.__getPath__(name), "w")
+        f = open(self.__getPath__(name), "a")
         f.write(output)
 
     def __checkFileExists__(self, name):

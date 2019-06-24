@@ -1,10 +1,10 @@
-from crawler import Crawler, CrawlerPool, Search
+from crawler import CrawlerCode, CrawlerPool, Search
 
 
 f = open("tokens.txt", "r")
 tokens = f.read().splitlines()
 
-pool = CrawlerPool(tokens, Crawler.search_code)
+pool = CrawlerPool(tokens, CrawlerCode)
 
 pool.addSearch(Search("terraform", 'resource', {'extension': 'tf'}))
 pool.addSearch(Search("ansible", 'hosts+tasks+name', {'extension': 'yml'}))
