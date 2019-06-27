@@ -1,15 +1,16 @@
 import os
-
+import base64
 from github import Github
 from github.GithubException import GithubException
 from time import sleep
 from random import randint
+from datetime import datetime
 
 DEFAULT_PATH = os.path.join(os.getcwd(), "results")
 
-# default: slot=0.1s, maxWait=1m
+
 class Crawler:
-    def __init__(self, token, slot=0.1, maxWait=60, path=DEFAULT_PATH):
+    def __init__(self, token, slot=0.1, maxWait=25, path=DEFAULT_PATH):
         self.token = token
         self.github = Github(token)
         self.fails = 0
@@ -17,15 +18,11 @@ class Crawler:
         self.path = path
         self.maxSlots = maxWait//slot
 
-    def search_code(self, search):
-        self.__search__(search, lambda g: g.search_code)
-
-    def __search__(self, search, f):
-        if self.__checkFileExists__(search.name):
-            return
-        repos = {}
+    def __search__(self, search):
+        res = {}
         query = self.__buildQuery__(search)
-        results, total = self.__getQueryResults__(query, f)
+        print(query)
+        results, total = self.__getQueryResults__(query)
         print(search.name, total)
         r = 0
         while r < total:
@@ -33,31 +30,34 @@ class Crawler:
             try:
                 result = results[r]
                 self.__requestCompleted__()
-                self.__addResult__(result, repos)
+                self.addResult(result, res)
                 self.__requestCompleted__()
-            except GithubException:
+            except GithubException as e:
+                print(e)
                 self.__requestFailed__()
                 # fail, recompute result and start from the same item r
-                results, total = self.__getQueryResults__(query, f)
+                results, total = self.__getQueryResults__(query)
                 continue
-            except:
-                # something bad happened return the current result
+            except Exception as e:
+                print(e)
+                #something bad happened return the current result
                 break
             r += 1
-        self.__writeToFile__(search.name, repos)
+        self.__writeToFile__(search.name, res)
 
-    def __getQueryResults__(self, query, f):
+    def __getQueryResults__(self, query):
         try:
-            results = f(self.github)(query)
+            results = self.executeQuery(query)
             total = results.totalCount
             self.__requestCompleted__()
-        except GithubException:
+        except GithubException as e:
+            print(e, query)
             self.__requestFailed__()
-            return self.__getQueryResults__(query, f)
+            return self.__getQueryResults__(query)
         return (results, total)
 
     def __buildQuery__(self, search):
-        q = '%s in:file' % search.text
+        q = '%s in:%s' % (search.text, search.where)
         for key, value in search.more.items():
             q += ' %s:%s' % (key, value)
         return q
@@ -79,18 +79,12 @@ class Crawler:
             print("waiting %.1f seconds..." % wait)
         sleep(wait)
 
-    def __addResult__(self, result, repos):
-        repo = result.repository.git_url
-        files = repos.get(repo, set())
-        files.add(result.path)
-        repos[repo] = files
-
-    def __writeToFile__(self, name, repos):
+    def __writeToFile__(self, name, res):
         output = ""
-        for url, files in repos.items():
+        for url, files in res.items():
             data = [url] + list(files)
             output += ",".join(data) + "\n"
-        f = open(self.__getPath__(name), "w")
+        f = open(self.__getPath__(name), "a")
         f.write(output)
 
     def __checkFileExists__(self, name):
