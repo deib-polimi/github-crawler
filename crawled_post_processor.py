@@ -65,7 +65,7 @@ def get_modifying_commits_per_file(repo_folder_name, filepath):
                     filtered_commit_list.append(c)
                     commit_added = True
                 word_idx = word_idx + 1 
-        return filtered_commit_list
+        return set(filtered_commit_list)
     except OSError:
         logger.info("error cloning")
         return []
