@@ -65,9 +65,30 @@ def get_modifying_commits_per_file(repo_folder_name, filepath):
                     filtered_commit_list.append(c)
                     commit_added = True
                 word_idx = word_idx + 1 
+        return filtered_commit_list
     except OSError:
         logger.info("error cloning")
         return []
+
+def get_commit_messages(repo_folder_name, commits):
+    messages = []
+    for c in commits:
+        p=subprocess.Popen(["git log --format=%B -n 1 " + c], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+        out,err = p.communicate()
+        messages.append(out)
+    return messages
+
+def get_commits_deletion(repo_folder_name, commits):
+    deletions = []
+    for c in commits:
+        p=subprocess.Popen(["git diff " + c], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+        out,err = p.communicate()
+        deletion=""
+        for l in out.split("\n"):
+            if(len(l) > 0 and l[0]=='-'):
+                deletion = deletion + l
+        deletions.append(deletion)
+    return deletions
 
 def worker(tasks, idx):
     while not tasks.empty():
@@ -88,19 +109,23 @@ def worker(tasks, idx):
                 filepath=r.iloc[ii]
                 if filepath is not np.nan:
                     commits=get_modifying_commits_per_file(os.path.join(WORKING_DIRECTORY, repo_folder_name), filepath)
-                    for c in commits:
-                        out_dataset=out_dataset.append({'repo_id': repo_id ,'commit': c, 'filepath': filepath}, ignore_index=True)
+                    messages=get_commit_messages(repo_folder_name, commits)
+                    deletions=get_commits_deletion(repo_folder_name, commits)
+                    for i in range(len(commits)):
+                        out_dataset=out_dataset.append({'repo_id': repo_id ,'commit': commits[i], 'message': messages[i], 'deletion': deletions[i], 'filepath': filepath}, ignore_index=True)
             remo_repo(repo_folder_name)
         out_dataset.to_csv(out_file)
 
 
 logger = logging.getLogger('crawled-post-processor')
 
+HOME="/home/warmik/eclipse-workspace"
+
 OUT_COLUMNS=["repo_id","commit","filepath"]
 
-CRAWLED_RESULTS_FOLDER="/home/warmik/eclipse-workspace/iac-crawler/results"
+CRAWLED_RESULTS_FOLDER = HOME + "/iac-crawler/results"
 
-WORKING_DIRECTORY="/home/warmik/eclipse-workspace/iac-crawler/wd"
+WORKING_DIRECTORY = HOME + "/iac-crawler/wd"
 
 onlyfiles = [f for f in listdir(CRAWLED_RESULTS_FOLDER) if isfile(join(CRAWLED_RESULTS_FOLDER, f))]
 
