@@ -67,7 +67,7 @@ def get_modifying_commits_per_file(repo_folder_name, filepath):
                 word_idx = word_idx + 1 
         return list(set(filtered_commit_list))
     except OSError:
-        logger.info("error cloning")
+        logger.info("error cloning " + repo_folder_name)
         return []
 
 def get_commit_messages(repo_folder_name, commits):
