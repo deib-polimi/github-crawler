@@ -65,7 +65,7 @@ def get_modifying_commits_per_file(repo_folder_name, filepath):
                     filtered_commit_list.append(c)
                     commit_added = True
                 word_idx = word_idx + 1 
-        return set(filtered_commit_list)
+        return list(set(filtered_commit_list))
     except OSError:
         logger.info("error cloning")
         return []
@@ -78,15 +78,22 @@ def get_commit_messages(repo_folder_name, commits):
         messages.append(out)
     return messages
 
-def get_commits_deletion(repo_folder_name, commits):
+def get_commits_deletion(repo_folder_name, commits, filepath):
     deletions = []
     for c in commits:
-        p=subprocess.Popen(["git diff " + c], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+        p=subprocess.Popen(["git diff " + c + "~ " + c + " " + filepath], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
         out,err = p.communicate()
         deletion=""
+        start = False
         for l in out.split("\n"):
-            if(len(l) > 0 and l[0]=='-'):
-                deletion = deletion + l
+            if start:
+                if(len(l) > 0 and l[0]=='-'):
+                    if deletion=="":
+                        deletion = l
+                    else:
+                        deletion = deletion + "\n" + l
+            if not start and len(l) > 2 and l[0] == '@' and l[1] == '@':
+                start = True
         deletions.append(deletion)
     return deletions
 
@@ -110,7 +117,7 @@ def worker(tasks, idx):
                 if filepath is not np.nan:
                     commits=get_modifying_commits_per_file(os.path.join(WORKING_DIRECTORY, repo_folder_name), filepath)
                     messages=get_commit_messages(repo_folder_name, commits)
-                    deletions=get_commits_deletion(repo_folder_name, commits)
+                    deletions=get_commits_deletion(repo_folder_name, commits, filepath)
                     for i in range(len(commits)):
                         out_dataset=out_dataset.append({'repo_id': repo_id ,'commit': commits[i], 'message': messages[i], 'deletion': deletions[i], 'filepath': filepath}, ignore_index=True)
             remo_repo(repo_folder_name)
