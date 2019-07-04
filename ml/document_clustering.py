@@ -55,7 +55,7 @@ def tokenize_only(text):
 
 commits = open('ansible-input/commits.txt').read().split('\n')
 
-messages = open('ansible-input/messages.txt').read().split('\nBREAKS HERE\n')
+messages = open('ansible-input/deletions.txt').read().split('\nBREAKS HERE\n')
     
 messages=[m.decode('utf-8') for m in messages]
 
@@ -199,24 +199,24 @@ plt.close()
 
 ###################### HIERARCHICAL
 
-linkage_matrix = ward(dist) #define the linkage_matrix using ward clustering pre-computed distances
-
-fig, ax = plt.subplots(figsize=(15, 20)) # set size
-ax = dendrogram(linkage_matrix, orientation="right", labels=commits);
-
-plt.tick_params(\
-    axis= 'x',          # changes apply to the x-axis
-    which='both',      # both major and minor ticks are affected
-    bottom='off',      # ticks along the bottom edge are off
-    top='off',         # ticks along the top edge are off
-    labelbottom='off')
-
-plt.tight_layout() #show plot with tight layout
-
-#uncomment below to save figure
-plt.savefig('ward_clusters.png', dpi=200) #save figure as ward_clusters
-
-plt.close()
+# linkage_matrix = ward(dist) #define the linkage_matrix using ward clustering pre-computed distances
+# 
+# fig, ax = plt.subplots(figsize=(15, 20)) # set size
+# ax = dendrogram(linkage_matrix, orientation="right", labels=commits);
+# 
+# plt.tick_params(\
+#     axis= 'x',          # changes apply to the x-axis
+#     which='both',      # both major and minor ticks are affected
+#     bottom='off',      # ticks along the bottom edge are off
+#     top='off',         # ticks along the top edge are off
+#     labelbottom='off')
+# 
+# plt.tight_layout() #show plot with tight layout
+# 
+# #uncomment below to save figure
+# plt.savefig('ward_clusters.png', dpi=200) #save figure as ward_clusters
+# 
+# plt.close()
 
 ##################### LDA
 
