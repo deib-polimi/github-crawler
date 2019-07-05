@@ -49,44 +49,46 @@ def file_len(fname):
     return i + 1
 
 def worker(tasks, idx, return_dict):
-    logger.info("Computing stats for " + file)
-    crawled=load_result_file(join(CRAWLED_RESULTS_FOLDER,file))
-
-    commits=pd.read_csv(join(COMMITS_PER_FILE_FOLDER,"commits-perfile" + file), index_col=0)
-    avg_number_of_files_per_repo=0
-  
-    for idx, r in crawled.iterrows():
-        avg_number_of_files_per_repo = avg_number_of_files_per_repo + (r.count()-1)
-        
-    avg_number_of_files_per_repo=avg_number_of_files_per_repo/crawled.shape[0]
-
-    avg_number_of_loc_in_file=0.0
-    file_count=0
-    max_number_of_loc_in_file=-1
-    avg_ratio_number_of_file_iac_in_repo=0.0
-    for idx, r in crawled.iterrows():
-            repo_id=r['repo_id']
-            if repo_id.startswith("git"):
-                clone_repo(re.sub('^%s' % "git","https", repo_id))
-            else:
-                clone_repo(repo_id)
-                
-            repo_folder_name=repo_id.rsplit("/",1)[1].rsplit(".",1)[0]
-            if os.path.exists(os.path.join(WORKING_DIRECTORY, repo_folder_name)):
-                repo_iac_file_count=0.0
-                for ii in range(1,len(r)):
-                    filepath=r.iloc[ii]
-                    if filepath is not np.nan:
-                        if os.path.isfile(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath)):
-                            file_count=file_count + 1 
-                            repo_iac_file_count=repo_iac_file_count + 1
-                            avg_number_of_loc_in_file = avg_number_of_loc_in_file + file_len(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath))
-                            if(file_len(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath))>max_number_of_loc_in_file):
-                                max_number_of_loc_in_file=file_len(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath))
-                total_repo_file_count = sum([len(files) for r, d, files in os.walk(os.path.join(WORKING_DIRECTORY, repo_folder_name))])
-                avg_ratio_number_of_file_iac_in_repo=avg_ratio_number_of_file_iac_in_repo + (repo_iac_file_count/total_repo_file_count)
-                remo_repo(repo_folder_name)
-                        
+    while not tasks.empty():
+        file = tasks.get()
+        logger.info("Computing stats for " + file)
+        crawled=load_result_file(join(CRAWLED_RESULTS_FOLDER,file))
+    
+        commits=pd.read_csv(join(COMMITS_PER_FILE_FOLDER,"commits-perfile" + file), index_col=0)
+        avg_number_of_files_per_repo=0
+      
+        for idx, r in crawled.iterrows():
+            avg_number_of_files_per_repo = avg_number_of_files_per_repo + (r.count()-1)
+            
+        avg_number_of_files_per_repo=avg_number_of_files_per_repo/crawled.shape[0]
+    
+        avg_number_of_loc_in_file=0.0
+        file_count=0
+        max_number_of_loc_in_file=-1
+        avg_ratio_number_of_file_iac_in_repo=0.0
+        for idx, r in crawled.iterrows():
+                repo_id=r['repo_id']
+                if repo_id.startswith("git"):
+                    clone_repo(re.sub('^%s' % "git","https", repo_id))
+                else:
+                    clone_repo(repo_id)
+                    
+                repo_folder_name=repo_id.rsplit("/",1)[1].rsplit(".",1)[0]
+                if os.path.exists(os.path.join(WORKING_DIRECTORY, repo_folder_name)):
+                    repo_iac_file_count=0.0
+                    for ii in range(1,len(r)):
+                        filepath=r.iloc[ii]
+                        if filepath is not np.nan:
+                            if os.path.isfile(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath)):
+                                file_count=file_count + 1 
+                                repo_iac_file_count=repo_iac_file_count + 1
+                                avg_number_of_loc_in_file = avg_number_of_loc_in_file + file_len(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath))
+                                if(file_len(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath))>max_number_of_loc_in_file):
+                                    max_number_of_loc_in_file=file_len(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath))
+                    total_repo_file_count = sum([len(files) for r, d, files in os.walk(os.path.join(WORKING_DIRECTORY, repo_folder_name))])
+                    avg_ratio_number_of_file_iac_in_repo=avg_ratio_number_of_file_iac_in_repo + (repo_iac_file_count/total_repo_file_count)
+                    remo_repo(repo_folder_name)
+                            
     
     return_dict[idx] = {"language/tool": file.split(".")[0],
                         "number_repos_with_at_least_one_file": crawled.shape[0],
