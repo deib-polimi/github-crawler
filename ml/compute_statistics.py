@@ -95,7 +95,7 @@ def worker(tasks, idx, return_dict):
                         "total_number_of_bug_commits": commits.shape[0],
                         "avg_number_of_bug_commits_per_repo": commits.groupby(["repo_id"]).agg("count")["commit"].mean(), 
                         "max_number_of_bug_commits_per_repo": commits.groupby(["repo_id"]).agg("count")["commit"].max(),
-                        "avg_number_of_loc_in_file": (avg_number_of_loc_in_file/file_count),
+                        "avg_number_of_loc_in_file": ((avg_number_of_loc_in_file/file_count) if file_count != 0 else np.nan),
                         "max_number_of_loc_in_file": max_number_of_loc_in_file,
                         "avg_ratio_number_of_file_iac_in_repo": avg_ratio_number_of_file_iac_in_repo/crawled.shape[0]}
     
