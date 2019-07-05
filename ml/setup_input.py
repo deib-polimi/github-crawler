@@ -3,8 +3,8 @@ import re
 import os
 import numpy as np
 
-INPUT_FILEPATH="./ansible-input/commits-perfileansible_files.csv"
-OUTPUT_DIR="ansible-input"
+INPUT_FILEPATH="./../results_commits/commits-perfilecompose_files.csv"
+OUTPUT_DIR="compose-results"
 
 # extract dictionary of distinct commits and corresponding repos from input file
 

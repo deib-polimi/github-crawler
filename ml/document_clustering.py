@@ -53,9 +53,11 @@ def tokenize_only(text):
             filtered_tokens.append(token)
     return filtered_tokens
 
-commits = open('ansible-input/commits.txt').read().split('\n')
+RESULT_FOLDER="ansible-results"
 
-messages = open('ansible-input/deletions.txt').read().split('\nBREAKS HERE\n')
+commits = open(os.path.join(RESULT_FOLDER,'commits.txt')).read().split('\n')
+
+messages = open(os.path.join(RESULT_FOLDER,'deletions.txt')).read().split('\nBREAKS HERE\n')
     
 messages=[m.decode('utf-8') for m in messages]
 
@@ -109,8 +111,8 @@ km.fit(tfidf_matrix)
 
 clusters = km.labels_.tolist()
 
-joblib.dump(km,  'doc_cluster.pkl')
-km = joblib.load('doc_cluster.pkl')
+joblib.dump(km,  os.path.join(RESULT_FOLDER,'doc_cluster.pkl'))
+km = joblib.load(os.path.join(RESULT_FOLDER,'doc_cluster.pkl'))
 clusters = km.labels_.tolist()
 
 commit_messages = { 'commit': commits, 'rank': ranks, 'message': messages, 'cluster': clusters }
@@ -193,7 +195,7 @@ ax.legend(numpoints=1)  #show legend with only 1 point
 #plt.show() #show the plot
 
 #uncomment the below to save the plot if need be
-plt.savefig('clusters_small_noaxes.png', dpi=200)
+plt.savefig(os.path.join(RESULT_FOLDER,'clusters_small_noaxes.png'), dpi=200)
 
 plt.close()
 
