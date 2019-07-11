@@ -24,15 +24,15 @@ for line in ansible:
     line = line.replace("{", "")
     line = line.replace("}", "")
     if not line.strip():
+        print("", file=fout)
         continue
     sides = line.split(":")
     if len(sides) > 1:
         left = sides[0]
         right = ":".join(sides[1:])
-        if i == 4257:
-            print(repr(left))
         if left.strip() == "module":
-            pass
+            left = left.strip()
+            right = right.strip()
         elif "\"" in right or "'" in right:
             right = "VAR"
         elif not right.strip():
