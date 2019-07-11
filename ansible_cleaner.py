@@ -29,7 +29,9 @@ for line in ansible:
     if len(sides) > 1:
         left = sides[0]
         right = ":".join(sides[1:])
-        if left == "module":
+        if i == 4257:
+            print(repr(left))
+        if left.strip() == "module":
             pass
         elif "\"" in right or "'" in right:
             right = "VAR"
