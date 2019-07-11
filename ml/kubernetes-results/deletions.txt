@@ -1,0 +1,1307 @@
+-- path: /etc/ssh/sshd_config
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "sshdConfig"}}
+-
+BREAKS HERE
+-  annotations:
+-    prometheus.io/scrape: "true"
+-    prometheus.io/port: "9290"
+BREAKS HERE
+-  tensorflow_gpu_1.3-py3_CURRENT: manual
+-  caffe_cpu_1.0-ddl_CURRENT: master-7
+-  caffe_cpu_1.0-py2_CURRENT: master-39
+-  caffe_gpu_1.0-ddl_CURRENT: master-7
+-  caffe_gpu_1.0-py2_CURRENT: master-39
+-
+BREAKS HERE
+-      - image: skycirrus/feed-ingress:v1.2.0
+BREAKS HERE
+-apiVersion: apps/v1beta1
+BREAKS HERE
+-  name: openfaas-prometheus
+-  namespace: openfaas
+-  name: openfaas-prometheus
+-  namespace: openfaas
+-  - apiGroups: [""]
+-    resources:
+-      - services
+-      - endpoints
+-      - pods
+-    verbs: ["get", "list", "watch"]
+-  name: openfaas-prometheus
+-  namespace: openfaas
+-  name: openfaas-prometheus
+-  - kind: ServiceAccount
+-    name: openfaas-prometheus
+-    namespace: openfaas
+BREAKS HERE
+-        {{if IsAzureStackCloud}}
+-            {{if IsMultiMasterCluster}}
+-        server: https://{{WrapAsVariable "masterPublicLbFQDN"}}:443
+-            {{else}}
+-            {{end}}
+-        {{else}}
+-        server: https://{{WrapAsVariable "kubernetesAPIServerIP"}}:443
+-        {{end}}
+BREAKS HERE
+-                - some-name-pxc-node-0
+BREAKS HERE
+-    name: From Build Pack
+BREAKS HERE
+-  clusterIp: None
+-  replicas: 1
+-      - image: paralin/rethinkdb-k8s:2.3.4
+-        - mountPath: /data
+-          name: storage
+-      - gcePersistentDisk:
+-          fsType: ext4
+-          pdName: rethinkdb-storage
+-        name: storage
+-apiVersion: v1
+-kind: ReplicationController
+-  replicas: 1
+-  selector:
+-    db: rethinkdb
+-    role: admin
+-      - image: paralin/rethinkdb-k8s:2.3.4
+BREAKS HERE
+-    - name: s3-get-presigned-url.service
+-        Description=Install s3-get-presigned-url
+-        ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+-        ExecStart=/usr/bin/curl -L -o /opt/bin/s3-get-presigned-url \
+-          https://github.com/kz8s/s3-get-presigned-url/releases/download/v0.1/s3-get-presigned-url_linux_amd64
+-        ExecStart=/usr/bin/chmod +x /opt/bin/s3-get-presigned-url
+-        RemainAfterExit=yes
+-    - name: get-ssl.service
+-        After=s3-get-presigned-url.service
+-        Description=Get ssl artifacts from s3 bucket using IAM role
+-        Requires=s3-get-presigned-url.service
+-        ExecStartPre=-/usr/bin/mkdir -p /etc/kubernetes/ssl
+-        ExecStart=/bin/sh -c "/usr/bin/curl $(/opt/bin/s3-get-presigned-url \
+-          ${ region } ${ bucket } ${ ssl-tar }) | tar xv -C /etc/kubernetes/ssl/"
+-        RemainAfterExit=yes
+-          --api-servers=http://master.${ internal-tld }:8080 \
+-          --config=/etc/kubernetes/manifests \
+-        RestartSec=5
+-          - --proxy-mode=iptables
+BREAKS HERE
+-            httpGet:
+-            httpGet:
+BREAKS HERE
+-    ETCD_CLIENT_PORT={{WrapAsVariable "masterEtcdClientPort"}}
+-    sudo sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
+BREAKS HERE
+-apiVersion: apps/v1beta1
+BREAKS HERE
+-         - '-statsd.mapping-config=/etc/statsd/mapping.conf'
+BREAKS HERE
+-status: {}
+BREAKS HERE
+-  labels:
+-    - config:
+-        node.master: true
+-        node.data: true
+-        node.ingest: true
+-      podTemplate:
+-        spec:
+-          containers:
+-          - name: elasticsearch
+-            resources:
+-              limits:
+-                memory: 2Gi
+-                cpu: 1
+-      nodeCount: 1
+-  http:
+-    service:
+-      spec:
+-        type: ClusterIP
+-  labels:
+-    - config:
+-        node.master: true
+-        node.data: true
+-        node.ingest: true
+-      podTemplate:
+-        spec:
+-          containers:
+-          - name: elasticsearch
+-            resources:
+-              limits:
+-                memory: 2Gi
+-                cpu: 1
+-      nodeCount: 1
+-  http:
+-    service:
+-      spec:
+-        type: ClusterIP
+-    controller-tools.k8s.io: "1.0"
+BREAKS HERE
+-          name: build-step3
+-            - skaffold version
+-          name: build-step6
+BREAKS HERE
+-    component: no-requests-pxc-proxysql
+-  name: no-requests-pxc-proxysql
+-      component: no-requests-pxc-proxysql
+-  serviceName: no-requests-pxc-proxysql
+-        component: no-requests-pxc-proxysql
+-        - name: MYSQL_PROXY_USER
+-          value: proxyuser
+-        - name: MYSQL_PROXY_PASSWORD
+-          valueFrom:
+-            secretKeyRef:
+-              key: proxyuser
+-              name: my-cluster-secrets
+-        - name: PXCSERVICE
+-          value: no-requests-pxc-nodes
+-          storage: 2Gi
+BREAKS HERE
+-            expression /^e2e-\\d{10}-\\S{26}$/
+BREAKS HERE
+-      volumes: 
+-
+BREAKS HERE
+-        # command: ['bash', '-c', 'chown', 'www-data:www-data', '/var/www/html/wp-content/upload', '&&', 'apache2', '-DFOREGROUND']
+BREAKS HERE
+-        args: ["-c", "ansible-playbook ./cassandra/workload/test.yml -i /etc/ansible/hosts -v; exit 0"]        
+BREAKS HERE
+-          value: "{{ .Values.global.ipmi_username | default .Values.ironic.ipmi_username }}"
+-          value: "{{ .Values.global.ipmi_password | default .Values.ironic.ipmi_password }}"
+BREAKS HERE
+-          /opt/sa/start-workers.sh
+BREAKS HERE
+-          storage: 5G
+BREAKS HERE
+-      value: tcp://proxy-api.linkerd.svc.cluster.local:8086
+BREAKS HERE
+-        storage: 5Gi
+-- apiVersion: v1
+-  kind: DeploymentConfig
+-# Enable when merged with init-container fix:
+-#  spec:
+-#    template:
+-#      metadata:
+-#        annotations:
+-#         pod.alpha.kubernetes.io/init-containers: "@assertThat(nullValue())@"
+BREAKS HERE
+-  name: kafka-connector
+BREAKS HERE
+-      jenkins.io/task-stage-name: From-Build-Pack
+BREAKS HERE
+-      - name: app
+-        - containerPort: 8000
+-          name: http-alt
+-            port: 8000
+-
+BREAKS HERE
+-  name: lagoon-openshift-template-node
+BREAKS HERE
+-    certmanager.k8s.io/acme-dns01-provider: clouddns
+-    certmanager.k8s.io/cluster-issuer: "letsencrypt-prod"
+-    secretName: o6s-com-tls
+BREAKS HERE
+-          secretName: custom-ssl
+BREAKS HERE
+-          - name: snapshot
+BREAKS HERE
+-        command: ["redis-server"]
+-        args: ["/conf/redis.conf"]
+-          items: 
+-          - key: redis.conf
+-            path: redis.conf
+BREAKS HERE
+-        image: openfaas/gateway:0.9.2
+-        image: openfaas/faas-netes:0.6.0
+BREAKS HERE
+-- name: Calico | Configure calico network pool
+BREAKS HERE
+----
+BREAKS HERE
+-kubernetes_common_manage_etc_hosts: True
+BREAKS HERE
+-            value: rabbit@$(NODE_NAME).{{SVC_NAME}}s
+BREAKS HERE
+-    - calico_upgrade_enabled or calico_version_on_server.stdout|version_compare('v3.0.0', '>')
+-    - calico_version_on_server.stdout|version_compare('v3.0.0', '<')
+-    - not calico_upgrade_enabled
+-    - calico_upgrade_enabled or calico_version_on_server.stdout|version_compare('v3.0.0', '>')
+-    - calico_version_on_server.stdout|version_compare('v3.0.0', '<')
+-    - not calico_upgrade_enabled
+-    - calico_version_on_server.stdout|version_compare('v3.0.0', '<')
+-    - not calico_upgrade_enabled
+-    - calico_upgrade_enabled or calico_version_on_server.stdout|version_compare('v3.0.0', '>')
+-    - calico_version_on_server.stdout|version_compare('v3.0.0', '<')
+-    - not calico_upgrade_enabled
+-    - calico_upgrade_enabled or calico_version_on_server.stdout|version_compare('v3.0.0', '>')
+-    - calico_version_on_server.stdout|version_compare('v3.0.0', '<')
+BREAKS HERE
+-    cat /etc/kafka/zookeeper.properties
+-    cat /etc/kafka/zookeeper.properties
+BREAKS HERE
+-    image: registry.connect.redhat.com/percona/percona-xtradb-cluster-operator-containers:1.0.0-pxc
+-    image: registry.connect.redhat.com/percona/percona-xtradb-cluster-operator-containers:1.0.0-proxysql
+BREAKS HERE
+-          image: percona
+BREAKS HERE
+-          image: gcr.io/jenkinsxio/builder-jx:0.1.477
+BREAKS HERE
+-      storage: ephemeral
+-        storage: ephemeral
+-      - name: data
+-        emptyDir: {}
+BREAKS HERE
+-      shell: "{{ bin_dir }}/kubectl get pods --namespace {{netcheck_namespace}} | grep ^netchecker-server"
+-      shell: "{{ bin_dir }}/kubectl get pods --namespace {{netcheck_namespace}} | grep '^netchecker-agent-.*Running'"
+BREAKS HERE
+-              value: webhook
+-              value: access_token
+-              value: channels
+BREAKS HERE
+-  progressDeadlineSeconds: 10
+BREAKS HERE
+-      annotations:
+-        secret/API_KEY: api_key
+-        secret/DB_PASS: database/password
+BREAKS HERE
+-  annotations:
+-    service.beta.kubernetes.io/oci-load-balancer-shape: 400Mbps
+BREAKS HERE
+-    kind: PersistentVolumeClaim
+-    metadata:
+-      name: ${SERVICE_NAME}
+-    spec:
+-      accessModes:
+-        - ReadWriteMany
+-      resources:
+-        requests:
+-          storage: 1Gi
+-  - apiVersion: v1
+-                - name: KEYCLOAK_SUPERADMIN_PASSWORD
+-                      name: keycloak-super-admin-password
+-                      key: KEYCLOAK_SUPERADMIN_PASSWORD
+-              volumeMounts:
+-                - mountPath: /opt/jboss/keycloak/standalone/data
+-                  name: ${SERVICE_NAME}
+-          volumes:
+-            - name: ${SERVICE_NAME}
+-              persistentVolumeClaim:
+-                claimName: ${SERVICE_NAME}
+BREAKS HERE
+-    ae: engine
+-      imagePullSecrets:
+-      - name: ae.docker.creds
+BREAKS HERE
+-            value: rabbitmq@$(NODE_NAME).{{APP_NAME}}
+BREAKS HERE
+-      storageClassName: openebs-standard
+BREAKS HERE
+-apiVersion: apps/v1beta
+-kind: DaemonSet
+-metadata:
+-  creationTimestamp: null
+-  name: fakeReplicationControllerASAT1
+-  namespace: fakeReplicationControllerASAT
+-spec:
+-  template:
+-    metadata:
+-      creationTimestamp: null
+-      labels:
+-        apps: fakeAutomountServiceAccountToken
+-    spec:
+-      containers:
+-      - name: fakeContainerASAT
+-        resources: {}
+-      serviceAccount: fakeDeprecatedServiceAccount
+-status:
+-  replicas: 0
+----
+BREAKS HERE
+-    image: perconalab/percona-xtradb-cluster-operator:0.4.0-pxc
+-    image: perconalab/percona-xtradb-cluster-operator:0.4.0-proxysql
+BREAKS HERE
+-    name: from-build-pack
+BREAKS HERE
+-          image: rawlingsj/builder-jx:wip34
+BREAKS HERE
+-     storageClassName: openebs-mongodb
+BREAKS HERE
+-  status:
+-    loadBalancer: {}
+BREAKS HERE
+-            appuio.ch/backupcommand: mysqldump --all-databases -h $MARIADB_HOST -u $MARIADB_USERNAME -p$MARIADB_PASSWORD
+BREAKS HERE
+-            ConditionPathExists=/etc/kubernetes/ssl/ca.pem
+-            ConditionPathExists=/etc/kubernetes/ssl/k8s-worker.pem
+-            ConditionPathExists=/etc/kubernetes/ssl/k8s-worker-key.pem
+-        Before=etcd2.service
+-        ConditionPathExists=/etc/kubernetes/ssl/k8s-worker.pem
+-        ConditionPathExists=/etc/kubernetes/ssl/k8s-worker-key.pem
+BREAKS HERE
+-      jenkins.io/task-stage-name: Build
+-      jenkins.io/task-stage-name: Second
+BREAKS HERE
+-          value: https://finviz.com/screener.ashx?v=111&f=cap_midunder,exch_nyse,fa_div_o6,idx_sp500&ft=4|https://finviz.com/screener.ashx?v=111&f=cap_midunder,exch_nyse,fa_div_o8,idx_sp500&ft=4
+BREAKS HERE
+-        image: perconalab/backupjob-openshift:0.2.0
+-          claimName: some-name-xb-on-demand-backup1
+BREAKS HERE
+-- name: Create test yamls
+-  blockinfile:
+-    path: /root/nano-pod-{{item}}.yaml
+-    create: yes
+-    marker: "# {mark} Ansible automatic example generation"
+-    block: |
+-      apiVersion: v1
+-      kind: Pod
+-      metadata:
+-        name: nano-{{item}}
+-        labels:
+-          name: webserver
+-      spec:
+-        containers:
+-        - name: nano
+-          image: ovnkubernetes/pause
+-          imagePullPolicy: IfNotPresent
+-        # This test yaml uses a custom nanoserver container that starts a simple
+-        # http server that can be used for tests. It's much faster compared to the
+-        # IIS container.
+-        - name: nano2
+-          image: alinbalutoiu/nanoserver-web:{{item}}
+-          imagePullPolicy: IfNotPresent
+-        nodeSelector:
+-          beta.kubernetes.io/os: windows
+-          # kubernetes.io/hostname: windows_{{item}}_hostname
+-  with_items:
+-    - 1709
+-    - 1803
+BREAKS HERE
+-        fabric8.io/iconUrl: "https://github.com/fabric8io/funktion/raw/master/docs/images/icon.png"
+BREAKS HERE
+-          value: some-name-pxc-unready
+BREAKS HERE
+-            - name: LAGOON_GIT_BRANCH
+-              valueFrom:
+-                configMapKeyRef:
+-                  name: lagoon-env
+-                  key: LAGOON_GIT_BRANCH
+-            - name: LAGOON_GIT_SAFE_BRANCH
+-              valueFrom:
+-                configMapKeyRef:
+-                  name: lagoon-env
+-                  key: LAGOON_GIT_SAFE_BRANCH
+-            - name: LAGOON_GIT_SHA
+-              valueFrom:
+-                configMapKeyRef:
+-                  name: lagoon-env
+-                  key: LAGOON_GIT_SHA
+-            - name: LAGOON_PROJECT
+-              valueFrom:
+-                configMapKeyRef:
+-                  name: lagoon-env
+-                  key: LAGOON_PROJECT
+BREAKS HERE
+-      tolerations: 
+BREAKS HERE
+-      SEDS+=("s|#init#advertised.listeners=OUTSIDE://#init#|advertised.listeners=OUTSIDE://${OUTSIDE_HOST}:${OUTSIDE_PORT}|")
+-    listeners=OUTSIDE://:9094,PLAINTEXT://:9092
+-    #init#advertised.listeners=OUTSIDE://#init#,PLAINTEXT://:9092
+BREAKS HERE
+-        image: nginx:alpine
+-        command: ["sleep", "8000"]
+BREAKS HERE
+-  labels:
+-    - config:
+-        node.master: true
+-        node.data: true
+-        node.ingest: true
+-      podTemplate:
+-        spec:
+-          containers:
+-          - name: elasticsearch
+-            resources:
+-              limits:
+-                memory: 2Gi
+-                cpu: 1
+-      nodeCount: 1
+-  http:
+-    service:
+-      spec:
+-        type: ClusterIP
+-  labels:
+-    - config:
+-        node.master: true
+-        node.data: true
+-        node.ingest: true
+-      podTemplate:
+-        spec:
+-          containers:
+-          - name: elasticsearch
+-            resources:
+-              limits:
+-                memory: 2Gi
+-                cpu: 1
+-      nodeCount: 1
+-  http:
+-    service:
+-      spec:
+-        type: ClusterIP
+-    controller-tools.k8s.io: "1.0"
+BREAKS HERE
+-            appuio.ch/backupcommand: mysqldump --all-databases -h $MARIADB_HOST -u $MARIADB_USERNAME -p$MARIADB_PASSWORD
+BREAKS HERE
+-        server: https://<kubernetesAPIServerIP>:443
+BREAKS HERE
+-            value: app-cassandra-ns 
+BREAKS HERE
+-  apiGroup: rbac.authorization.k8s.io
+BREAKS HERE
+-    auto.create.topics.enable=true
+BREAKS HERE
+-        image: percona/percona-xtradb-cluster-operator:0.3.0-backup
+BREAKS HERE
+-        quay.io/coreos/awscli -- aws s3 cp s3://${ pki-s3-bucket }/$1 /etc/kubernetes/ssl
+BREAKS HERE
+-      fabric8.io/git-branch: master
+BREAKS HERE
+-  - name: Wait 30s for reconcilation to run
+BREAKS HERE
+-  name: litmus-jenkins
+BREAKS HERE
+-  namespace: litmus
+BREAKS HERE
+-    name: percona
+-      name: percona
+BREAKS HERE
+-  version: "6.6.2"
+-  version: "6.6.2"
+BREAKS HERE
+----
+BREAKS HERE
+-    funktion.fabric8.io/fileExtensions: "js"
+-    funktion.fabric8.io/sourceMountPath: "/usr/src/app/funktion"
+-          - image: funktion/funktion-nodejs-runtime:1.0.2
+-                mountPath: /funktion
+BREAKS HERE
+-          value: some-name-pxc-unready
+BREAKS HERE
+-
+-- name: Kubelet | Wait 15 seconds for kubelet to register this node
+-  pause:
+-    seconds: 15
+BREAKS HERE
+-
+-
+-
+-
+-
+-
+-
+-
+BREAKS HERE
+-      - name: loadgen
+BREAKS HERE
+-          nodeSelector:
+-{{ toYaml .Values.nodeSelector | indent 12 }}
+BREAKS HERE
+-            - skaffold build -f skaffold.yaml
+-            - /bin/sh
+-            - -c
+-          image: jenkinsxio/builder-nodejs:0.1.235
+BREAKS HERE
+-          value: https://hooks.slack.com/services/YOUR_WEBHOOK_HERE
+BREAKS HERE
+-  labels:
+-    name: redis
+-    app: hello-cloud
+BREAKS HERE
+-# Copyright 2017 The Jaeger Authors
+BREAKS HERE
+-      imagePullSecrets:
+-      - name: bluemix-cr-ng
+BREAKS HERE
+-    domain: replace.me.io
+-    exposer: NodePort
+-  name: "exposecontroller-cm"
+BREAKS HERE
+-              image: derailed/popeye:v0.3.0
+BREAKS HERE
+-apiVersion: extensions/v1beta1
+-kind: DaemonSet
+-metadata:
+-  name: traefik-ingress-controller
+-  namespace: kube-system
+-  labels:
+-    k8s-app: traefik-ingress-lb
+-    kubernetes.io/cluster-service: "true"
+-spec:
+-  template:
+-    metadata:
+-      labels:
+-        k8s-app: traefik-ingress-lb
+-        name: traefik-ingress-lb
+-    spec:
+-      hostNetwork: true # workaround
+-      terminationGracePeriodSeconds: 60
+-      containers:
+-      - image: containous/traefik:v1.0.3
+-        name: traefik-ingress-lb
+-        imagePullPolicy: Always
+-        volumeMounts:
+-          - mountPath: /etc/traefik
+-            name: traefik-volume
+-            readOnly: false
+-        args:
+-        - --web
+-        - --kubernetes
+-        - --configFile=/etc/traefik/traefik.toml
+-        - --logLevel=DEBUG
+-      volumes:
+-        - hostPath:
+-            path: /etc/traefik
+-          name: traefik-volume
+-      nodeSelector:
+-        role: edge
+BREAKS HERE
+-    fabric8.io/git-commit: d4364201d2c39fff53c1fcf3be58b3de435996e2
+-  revisionHistoryLimit: 2
+-        fabric8.io/git-commit: d4364201d2c39fff53c1fcf3be58b3de435996e2
+-        image: fabric8/fabric8-maven-sample-spring-boot:snapshot-170818-125156-0949
+-        imagePullPolicy: Always
+BREAKS HERE
+-            ConditionPathExists=/etc/kubernetes/ssl/k8s-etcd.pem
+-            ConditionPathExists=/etc/kubernetes/ssl/k8s-etcd-key.pem
+BREAKS HERE
+-  # apiEndpoint:
+-  #   bindPort: 6443
+BREAKS HERE
+-      app: pxc
+-      cluster: custom
+-      component: custom-pxc
+-        app: pxc
+-        cluster: custom
+-        component: custom-pxc
+-        - mountPath: /etc/mysql/conf.d/
+-          name: config-volume
+-        - 99
+-      terminationGracePeriodSeconds: 30
+-        name: config-volume
+BREAKS HERE
+-        app: crunchy-loadgen-litmus
+BREAKS HERE
+-        fabric8.io/iconUrl: "https://github.com/fabric8io/funktion/raw/master/docs/images/icon.png"
+BREAKS HERE
+-  labels:
+-    app: pxc
+-    cluster: hostpath
+-    component: hostpath-pxc
+-      app: pxc
+-      cluster: hostpath
+-      component: hostpath-pxc
+-        app: pxc
+-        cluster: hostpath
+-        component: hostpath-pxc
+-              matchExpressions:
+-              - key: app
+-                operator: In
+-                values:
+-                - pxc
+-              - key: cluster
+-                operator: In
+-                values:
+-                - hostpath
+-              - key: component
+-                operator: In
+-                values:
+-                - hostpath-pxc
+-        - mountPath: /etc/mysql/conf.d/
+-          name: config-volume
+-        - 99
+-      terminationGracePeriodSeconds: 30
+-        name: config-volume
+BREAKS HERE
+-          image: localstack/localstack
+BREAKS HERE
+-- apiVersion: v1
+BREAKS HERE
+-            appuio.ch/backupcommand: >-
+-              mysqldump --all-databases -h $MARIADB_HOST -u $MARIADB_USERNAME
+-              -p$MARIADB_PASSWORD
+BREAKS HERE
+-        - name: DLAAS_LEARNER_IMAGE_PULL_SECRET
+-          valueFrom:
+-            secretKeyRef:
+-              name: lcm-secrets
+-              key: DLAAS_LEARNER_IMAGE_PULL_SECRET
+BREAKS HERE
+-      - image: traefik:v1.3.8
+BREAKS HERE
+-# DeploymentConfig for starting up the random-generator
+BREAKS HERE
+-        # IEX Account Config
+BREAKS HERE
+-            restartPolicy: Never
+BREAKS HERE
+-          name: Trigger single-node deployment with built ISO
+BREAKS HERE
+-    image: percona/percona-xtradb-cluster-operator:0.3.0-pxc
+-    image: percona/percona-xtradb-cluster-operator:0.3.0-proxysql
+BREAKS HERE
+-      # Needs to be at least as long as the -elb-drain-delay setting below, with a buffer for other teardown.
+-      # Recommend to set this to 2x -elb-drain-delay.
+-        - -elb-drain-delay=30s
+BREAKS HERE
+-        {{- if .Values.global.ipmi_exporter.ironic.enabled }}
+-        {{- if .Values.global.ipmi_exporter.netbox.enabled }}
+BREAKS HERE
+-      - image: traefik:v1.2.1
+BREAKS HERE
+-        - name: CONDUIT_PROXY_DESTINATIONS_AUTOCOMPLETE_FQDN
+-          value: Kubernetes
+-        - name: CONDUIT_PROXY_DESTINATIONS_AUTOCOMPLETE_FQDN
+-          value: Kubernetes
+BREAKS HERE
+-- name: Kubernetes Minion | Checking if certs have been already generated
+-  stat:
+-    path: /etc/kubernetes/tls/ca.pem
+-  register: certs_check
+-
+-- name: Kubernetes Minion | Generating certs if needed
+-  include_tasks: ./generate_certs_minion.yml
+-  when: not certs_check.stat.exists or certs_generated
+BREAKS HERE
+-        image: "{{ .Values.global.imageRegistry }}/{{ .Values.ipmi_exporter.image }}:{{ .Values.ipmi_exporter.tag }}"
+-          value: "{{ .Values.ipmi_exporter.app_env }}"
+BREAKS HERE
+-        - i=0; while true; do echo "GET /users/$i"; sleep 1; i=$((i + 1)); done
+BREAKS HERE
+-    creationTimestamp: null
+-    labels:
+-      service: ${SERVICE_NAME}
+-      branch: ${SAFE_BRANCH}
+-      project: ${SAFE_PROJECT}
+-    name: router-logs
+-  spec:
+-    ports:
+-    - name: udp-input-module
+-      port: 5140
+-      protocol: UDP
+-      targetPort: 5140
+-    selector:
+-      service: ${SERVICE_NAME}
+-- apiVersion: v1
+-  kind: Service
+-  metadata:
+BREAKS HERE
+-          name: Debug step - report IPs, add SSH keys, wait 1 hour
+-          command: >
+-            ip a &&
+-            mkdir -p ~/.ssh &&
+-            echo "%(secret:ssh_pub_keys)s" >> ~/.ssh/authorized_keys &&
+-            sleep 3600
+-      - ShellCommand:
+-          name: Debug step - report IPs, add SSH keys, wait 4 hours
+-          timeout: 14400
+-          command: >
+-            ip a &&
+-            mkdir -p ~/.ssh &&
+-            echo "%(secret:ssh_pub_keys)s" >> ~/.ssh/authorized_keys &&
+-            sleep 14400
+-          alwaysRun: true
+-          doStepIf: false
+BREAKS HERE
+-        image: solsson/kafka-manager@sha256:28b1a0b355f3972a9e3b5ac82abcbfee9a72b66a2bfe86094f6ea2caad9ce3a7
+BREAKS HERE
+-      appuio.ch/backup: "true"
+BREAKS HERE
+-kind: List
+-items:
+-- kind: ReplicationController
+-  apiVersion: v1
+-  metadata:
+-    labels:
+-      app: kubernetes-dashboard
+-      version: v1.0.0
+-    name: kubernetes-dashboard
+-    namespace: kube-system
+-  spec:
+-    replicas: 1
+-    selector:
+-      app: kubernetes-dashboard
+-      version: v1.0.0
+-    template:
+-      metadata:
+-        labels:
+-          app: kubernetes-dashboard
+-          version: v1.0.0
+-      spec:
+-        containers:
+-        - name: kubernetes-dashboard
+-          image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.0.0
+-          imagePullPolicy: Always
+-          ports:
+-          - containerPort: 9090
+-            protocol: TCP
+-          args:
+-            # Uncomment the following line to manually specify Kubernetes API server Host
+-            # If not specified, Dashboard will attempt to auto discover the API server and connect
+-            # to it. Uncomment only if the default does not work.
+-            - --apiserver-host=http://10.10.0.2:8080
+-          livenessProbe:
+-            httpGet:
+-              path: /
+-              port: 9090
+-            initialDelaySeconds: 30
+-            timeoutSeconds: 30
+-- kind: Service
+-  apiVersion: v1
+-  metadata:
+-    labels:
+-      app: kubernetes-dashboard
+-    name: dashboard
+-    namespace: kube-system
+-  spec:
+-    type: ClusterIP
+-    clusterIP: 10.0.0.3
+-    ports:
+-    - port: 80
+-      targetPort: 9090
+-    selector:
+-      app: kubernetes-dashboard
+BREAKS HERE
+-            expression /^e2e-\\d{10}-\\S{26}$/
+BREAKS HERE
+-      - name: install-cni
+-        image: {{ images.flannel }}
+-        command: [ "/bin/sh", "-c", "set -e -x; cp -f /etc/kube-flannel/cni-conf.json /etc/cni/net.d/10-flannel.conf; while true; do sleep 3600; done" ]
+-        volumeMounts:
+-        - name: cni
+-          mountPath: /etc/cni/net.d
+-        - name: flannel-cfg
+-          mountPath: /etc/kube-flannel/
+BREAKS HERE
+-  annotations:
+-    volume.beta.kubernetes.io/storage-class: testclass
+BREAKS HERE
+-      generate k8s-apiserver client-server "$${DEFAULT_HOSTS},${ ip-k8s-service },master.${ internal-tld },*.${ region }.elb.amazonaws.com"
+BREAKS HERE
+-    type: OnDelete
+BREAKS HERE
+-      # Only use nodes with the label 'feature=hw-rng' enabled
+-      nodeSelector:
+-        feature: hw-rng
+-        - "while true; do java -cp / RandomRunner /host_dev/random 100000; sleep 30; done"
+BREAKS HERE
+-    - name: debug memcached lookup
+-      debug:
+-        var: deploy
+-      vars:
+-        deploy: '{{ lookup("k8s",
+-          kind="Deployment",
+-          api_version="apps/v1",
+-          namespace=namespace,
+-          label_selector="app=memcached"
+-        )}}'
+-    - name: Wait 2 minutes for memcached deployment
+-      debug:
+-        var: deploy
+-      until: deploy and deploy.status and deploy.status.replicas == deploy.status.get("availableReplicas", 0)
+-      retries: 12
+-      delay: 10
+-      vars:
+-        deploy: '{{ lookup("k8s",
+-          kind="Deployment",
+-          api_version="apps/v1",
+-          namespace=namespace,
+-          label_selector="app=memcached"
+-        )}}'
+-    - name: Create ConfigMap that the Operator should delete
+-      k8s:
+-        definition:
+-          apiVersion: v1
+-          kind: ConfigMap
+-          metadata:
+-            name: deleteme
+-            namespace: '{{ namespace }}'
+-          data:
+-            delete: me
+-    - name: debug CR lookup
+-      debug:
+-        var: cr
+-      vars:
+-        deploy: '{{ lookup("k8s",
+-          kind=custom_resource.kind,
+-          api_version=custom_resource.apiVersion,
+-          namespace=namespace,
+-          resource_name=custom_resource.metadata.name
+-        )}}'
+-    - name: Verify custom status exists
+-      assert:
+-        that: cr.resources[0].status.get("test") == "hello world"
+-      when: cr is defined
+-    - name: Delete the custom resource
+-      k8s:
+-        state: absent
+-        namespace: '{{ namespace }}'
+-        definition: '{{ custom_resource }}'
+-    - name: Wait for the custom resource to be deleted
+-      k8s_facts:
+-        api_version: '{{ custom_resource.apiVersion }}'
+-        kind: '{{ custom_resource.kind }}'
+-        namespace: '{{ namespace }}'
+-        name: '{{ custom_resource.metadata.name }}'
+-      register: cr
+-      retries: 10
+-      delay: 2
+-      until: not cr.resources
+-      failed_when: cr.resources
+-    - name: Verify the ConfigMap was deleted
+-      assert:
+-        that: not lookup('k8s', kind='ConfigMap', api_version='v1', namespace=namespace, resource_name='deleteme')
+-    - name: Verify the Deployment was deleted
+-      assert:  
+-        that: not lookup('k8s', kind='Deployment', api_version='apps/v1', namespace=namespace, label_selector='app=memcached')
+BREAKS HERE
+-            - '[ "imok" = "$(echo ruok | nc -w 1 127.0.0.1 2181)" ]'
+BREAKS HERE
+-    path: '"{{ install_info.install_path }}\\servicewrapper.exe" kubelet "{{ install_info.install_path }}\\kubelet.exe" --hostname-override="{{ ansible_hostname }}" --cluster-dns="{{ kubernetes_info.K8S_DNS_SERVICE_IP }}" --cluster-domain="{{ kubernetes_info.K8S_DNS_DOMAIN }}" --pod-infra-container-image="{{kubernetes_info.infracontainername_1709}}" --resolv-conf="" --kubeconfig="{{ install_info.install_path }}\\kubeconfig.yaml" --network-plugin=cni --cni-bin-dir="{{ install_info.install_path }}\\cni" --cni-conf-dir="{{ install_info.install_path }}\\cni" --log-dir="{{ install_info.install_path }}" --logtostderr=false --cgroups-per-qos=false --enforce-node-allocatable=""'
+BREAKS HERE
+-        role: edge-router
+BREAKS HERE
+-      expose: "true"
+-      expose: "true"
+BREAKS HERE
+-
+-    systemctl enable rpc-statd
+-    systemctl start rpc-statd
+BREAKS HERE
+-          image: topheman/docker-experiments_api_production:1.0.0
+BREAKS HERE
+-# This template uses Jaeger with in-memory storage with limited functionality
+-# Do not use this in production environment!
+-#
+-# kubectl create -f jaeger-all-in-one-template.yml
+-# kubectl delete pod,service,deployment -l jaeger-infra
+BREAKS HERE
+-  fetch:
+-    flat: yes
+BREAKS HERE
+-          value: tcp://proxy-api.conduit.svc.cluster.local:8086
+-          value: tcp://proxy-api.conduit.svc.cluster.local:8086
+BREAKS HERE
+-  name: my-docker-fullstack-project-api-deployment
+-        app: my-docker-fullstack-project
+-        - name: my-docker-fullstack-project-api-container
+-          image: topheman/my-docker-fullstack-project_api_production:0.1.0
+-    app: my-docker-fullstack-project
+BREAKS HERE
+-        image: solsson/burrow-exporter:api-v3@sha256:4407616c5720e8a3397f668eec1aaa31df751b3614c0adfc56cae231f2eaeee2
+BREAKS HERE
+-  - name: PERSISTENT_STORAGE_CLASS
+-    description: Name of the Storage Class to use
+-    value: ""
+-    storageClassName: "${PERSISTENT_STORAGE_CLASS}"
+BREAKS HERE
+-apiVersion: batch/v1
+BREAKS HERE
+-  etcd2:
+-    discovery-srv: ${ internal-tld }
+-    peer-trusted-ca-file: /etc/kubernetes/ssl/ca.pem
+-    peer-client-cert-auth: true
+-    peer-cert-file: /etc/kubernetes/ssl/k8s-worker.pem
+-    peer-key-file: /etc/kubernetes/ssl/k8s-worker-key.pem
+-    trusted-ca-file: /etc/kubernetes/ssl/ca.pem
+-    client-cert-auth: true
+-    cert-file: /etc/kubernetes/ssl/k8s-worker.pem
+-    key-file: /etc/kubernetes/ssl/k8s-worker-key.pem
+-    proxy: on
+-    etcd_keyfile: /etc/kubernetes/ssl/k8s-worker-key.pem
+BREAKS HERE
+-  name: system:authenticated
+BREAKS HERE
+-            value: openebs-mongodb
+BREAKS HERE
+-      until: nca_pod.stdout_lines|length >= groups['kube-node']|intersect(play_hosts)|length * 2
+-        agents.content|from_json|length >= groups['kube-node']|intersect(play_hosts)|length * 2
+-      when: not agents.content == '{}'
+-      delegate_to: "{{groups['kube-master'][0]}}"
+BREAKS HERE
+-  serviceName: no-requests-proxysql-headless
+-          value: no-requests-proxysql-headless
+BREAKS HERE
+-    run: here
+-    #kubernetes.io/hostname: machine02
+BREAKS HERE
+-          docker-builder: eve/workers/pod-builder
+-    - ShellCommand:
+-        name: Wait for Docker daemon to be ready
+-        command: |
+-          bash -c '
+-          for i in {1..10}
+-          do
+-            docker --version &> /dev/null && exit
+-            sleep 2
+-          done
+-          echo "Could not reach Docker daemon from buildbot worker" >&2
+-          exit 1'
+-        haltOnFailure: true
+-    - Git: &git_pull
+-        name: git pull
+-        repourl: "%(prop:git_reference)s"
+-        method: clobber
+-        retryFetch: true
+-        haltOnFailure: true
+-    - ShellCommand:
+-        name: build everything
+-        command: make
+-    - ShellCommand:
+-        name: Put the iso file in a separate folder
+-        command: mkdir iso && cp _build/metalk8s.iso _build/SHA256SUM iso
+-    - Upload:
+-        name: upload artifacts
+-        source: iso/
+-        urls:
+-          - "*.iso"
+-          - "SHA256SUM"
+-    - Git: *git_pull
+-    - ShellCommand:
+-        name: Run all linting targets
+-        command: make lint
+-        flunkOnFailure: false
+-        haltOnFailure: false
+BREAKS HERE
+-        image: percona/percona-xtradb-cluster-operator:0.3.0-backup
+BREAKS HERE
+-        image: perconalab/backupjob-openshift
+BREAKS HERE
+-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/devops/apps/configmapcontroller/2.2.335/configmapcontroller-2.2.335.jar!/META-INF/fabric8/kubernetes.yml
+-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/devops/apps/fabric8-docker-registry/2.2.335/fabric8-docker-registry-2.2.335.jar!/META-INF/fabric8/kubernetes.yml
+-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/apps/keycloak/1.0.2/keycloak-1.0.2.jar!/META-INF/fabric8/kubernetes.yml
+-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/apps/keycloak-db/1.0.2/keycloak-db-1.0.2.jar!/META-INF/fabric8/kubernetes.yml
+-          maven.fabric8.io/source-url: jar:file:/home/hshinde/.m2/repository/io/fabric8/apps/nexus-app/1.0.1/nexus-app-1.0.1.jar!/META-INF/fabric8/kubernetes.yml
+BREAKS HERE
+-  metadata:
+-    annotations:
+-      volume.beta.kubernetes.io/storage-class: standard
+BREAKS HERE
+-	
+BREAKS HERE
+-        - -XX:+UnlockExperimentalVMOptions
+-        - -XX:+UseCGroupMemoryLimitForHeap
+-        - -XX:MaxRAMFraction=1
+-        - -XshowSettings:vm
+BREAKS HERE
+-    echo "$(date): Running Tensorflow with horovod"
+-      echo "horovod test exited with an error code ${PIPE[0]}"
+BREAKS HERE
+-        msg: Waiting for memcached deployment...
+BREAKS HERE
+-        storage: 5Gi
+BREAKS HERE
+-          value: "{{ .Values.global.ipmi_username }}"
+-          value: "{{ .Values.global.ipmi_password }}"
+BREAKS HERE
+-    serviceName: ${SERVICE_NAME}
+BREAKS HERE
+-  replicas: 2
+-      labels:
+-        app: contour
+-        prometheus.io/scrape: "true"
+-        prometheus.io/path: "/stats"
+-        prometheus.io/format: "prometheus"
+-      - image: gcr.io/heptio-images/contour:master
+-        command: ["contour"]
+-        args: ["serve", "--incluster"]
+-      - image: docker.io/envoyproxy/envoy-alpine:v1.6.0
+-        command: ["envoy"]
+-        args:
+-        - --config-path /config/contour.yaml
+-        - --service-cluster cluster0
+-        - --service-node node0
+-        - --log-level info
+-        - --v2-config-only
+-        - name: contour-config
+-          mountPath: /config
+-      - image: gcr.io/heptio-images/contour:master
+-        command: ["contour"]
+-        args: ["bootstrap", "/config/contour.yaml"]
+-        - name: contour-config
+-          mountPath: /config
+BREAKS HERE
+-          value: "{{ .Values.ironic.ipmi_username }}"
+-          value: "{{ .Values.ironic.ipmi_password }}"
+BREAKS HERE
+-      sed -i.bak -e '/myself/ s/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}/${POD_IP}/' ${CLUSTER_CONFIG}
+BREAKS HERE
+-apiVersion: apps/v1
+-  creationTimestamp: null
+-  name: cababilitiesAdded
+-      creationTimestamp: null
+-      - name: fakeContainerSC1
+-            - AUDIT_WRITE
+BREAKS HERE
+-            value: app-busybox-ns 
+BREAKS HERE
+-            appuio.ch/backupcommand: /bin/sh -c "mysqldump --all-databases -h $MARIADB_HOST -u $MARIADB_USERNAME -p$MARIADB_PASSWORD"
+BREAKS HERE
+-- path: /etc/default/grub
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "defaultGrub"}}
+-
+BREAKS HERE
+-      app: pxc
+-      cluster: no-requests
+-      component: no-requests-pxc
+-        app: pxc
+-        cluster: no-requests
+-        component: no-requests-pxc
+-        - mountPath: /etc/mysql/conf.d/
+-          name: config-volume
+-        name: config-volume
+BREAKS HERE
+-  default:
+BREAKS HERE
+-        volume.beta.kubernetes.io/storage-class: openebs-redis
+BREAKS HERE
+-      when: ansible_os_family == "Container Linux by CoreOS"
+-      when: ansible_os_family != "Container Linux by CoreOS"
+BREAKS HERE
+-          serviceName: of-router
+BREAKS HERE
+-    version: 1.0.0-SNAPSHOT
+-      version: 4.0.41
+-      version: 4.0.41
+-      version: 4.0.41
+-      version: 4.0.41
+-      version: 1.0.0-SNAPSHOT
+-      version: 4.0.41
+-      version: 4.0.41
+-      version: 4.0.41
+-      version: 4.0.41
+-      fabric8.io/git-commit: 2b99f551ea8d500df90ea4e22e3348276ac6cae8
+-      fabric8.io/git-branch: release-v4.0.41
+-      version: 4.0.41
+-      fabric8.io/git-commit: 2b99f551ea8d500df90ea4e22e3348276ac6cae8
+-      fabric8.io/git-branch: release-v4.0.41
+-      version: 4.0.41
+-      version: 4.0.41
+-      version: 4.0.41
+-      version: 1.0.0-SNAPSHOT
+-      version: 1.0.0-SNAPSHOT
+-      version: 1.0.0-SNAPSHOT
+-      version: 1.0.0-SNAPSHOT
+-    org.jenkinsci.main.modules.sshd.SSHD.xml: |-
+-      <?xml version='1.0' encoding='UTF-8'?>
+-      <org.jenkinsci.main.modules.sshd.SSHD>
+-        <port>-1</port>
+-      </org.jenkinsci.main.modules.sshd.SSHD>
+-    io.fabric8.jenkins.openshiftsync.GlobalPluginConfiguration.xml: |-
+-      <io.fabric8.jenkins.openshiftsync.GlobalPluginConfiguration plugin="openshift-sync@0.1-SNAPSHOT">
+-        <enabled>false</enabled>
+-        <jobNamePattern>.*</jobNamePattern>
+-        <namespace>${PROJECT_NAMESPACE}</namespace>
+-      </io.fabric8.jenkins.openshiftsync.GlobalPluginConfiguration>
+-          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/devops/apps/configmapcontroller/2.2.335/configmapcontroller-2.2.335.jar!/META-INF/fabric8/kubernetes.yml
+-          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/devops/apps/fabric8-docker-registry/2.2.335/fabric8-docker-registry-2.2.335.jar!/META-INF/fabric8/kubernetes.yml
+-      fabric8.io/git-commit: 2b99f551ea8d500df90ea4e22e3348276ac6cae8
+-      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=jenkins&var-version=4.0.41
+-      fabric8.io/git-branch: release-v4.0.41
+-      version: 4.0.41
+-          fabric8.io/git-commit: 2b99f551ea8d500df90ea4e22e3348276ac6cae8
+-          fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=jenkins&var-version=4.0.41
+-          fabric8.io/git-branch: release-v4.0.41
+-          version: 4.0.41
+-          image: fabric8/jenkins-openshift:vb6fc097
+-          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/apps/keycloak/1.0.2/keycloak-1.0.2.jar!/META-INF/fabric8/kubernetes.yml
+-          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/apps/keycloak-db/1.0.2/keycloak-db-1.0.2.jar!/META-INF/fabric8/kubernetes.yml
+-          maven.fabric8.io/source-url: jar:file:/home/rohan/.m2/repository/io/fabric8/apps/nexus-app/1.0.1/nexus-app-1.0.1.jar!/META-INF/fabric8/kubernetes.yml
+-- name: RECOMMENDER_API_TOKEN
+BREAKS HERE
+-          - image: nodesource/nsolid-storage:boron-2.1.2
+-        volumes:
+-        - name: nsolid-storage
+-          peristentVolumeClaim:
+-            claimName: nsolid-storage
+-              name: nginx-config
+BREAKS HERE
+-  {{if .IsUbuntu1604}}
+-- path: /etc/ssh/sshd_config
+-  permissions: "0600"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "sshdConfig1604"}}
+-  {{else}}
+-- path: /etc/ssh/sshd_config
+-  permissions: "0600"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "sshdConfig"}}
+-  {{end}}
+-
+-- path: /etc/issue
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "etcIssue"}}
+-
+-- path: /etc/issue.net
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "etcIssueNet"}}
+-
+-- path: /etc/sysctl.d/60-CIS.conf
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "cisNetEnforcement"}}
+-
+-- path: /etc/rsyslog.d/60-CIS.conf
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "cisLogEnforcement"}}
+-
+-- path: /etc/modprobe.d/CIS.conf
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "modprobeConfCIS"}}
+-
+-- path: /etc/security/pwquality.conf
+-  permissions: "0600"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "pwQuality"}}
+-
+-- path: /etc/pam.d/su
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "pamDotDSU"}}
+-
+-- path: /etc/pam.d/common-auth
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "pamDotDCommonAuth"}}
+-
+-- path: /etc/pam.d/common-password
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "pamDotDCommonPassword"}}
+-
+-- path: /etc/profile.d/CIS.sh
+-  permissions: "0644"
+-  encoding: gzip
+-  owner: root
+-  content: !!binary |
+-    {{CloudInitData "profileDCISSh"}}
+-
+BREAKS HERE
+-        args: ["-c", "ansible-playbook ./percona/chaos/cstor_verify_rebuild/test.yml -i /etc/ansible/hosts -vv; exit 0"]
+BREAKS HERE
+-# Copyright (C) 2017 Red Hat, Inc.
+BREAKS HERE
+-              image: ${REGISTRY}/${OPENSHIFT_PROJECT}/${SERVICE_NAME}:latest
+BREAKS HERE
+-    whitelistObjectNames: ["kafka.server:*","java.lang:*"]
+BREAKS HERE
+-  - name: dfer
+-    - while true; do df -h; sleep 5; done
+BREAKS HERE
+-apiVersion: extensions/v1beta1
+BREAKS HERE
+-  namespace: "openfaas"
+-  namespace: "openfaas"
+BREAKS HERE
+-  name: sa-engine
+-      app: sa-engine
+-        app: sa-engine
+-      hostname: sa-engine
+-        name: sa-engine
+BREAKS HERE
+-        - image: img1
+-        - image: img2
+BREAKS HERE
+-        volumeMounts:
+-          - name: logs
+-            mountPath: /var/log/ansible
+-        tty: true
+-      - name: logger
+-        image: openebs/logger
+-        command: ["/bin/bash"]
+-        args: ["-c", "./logger.sh -d 10 -r maya,openebs,pvc,fio; exit 0"]
+-        volumeMounts:
+-          - name: kubeconfig
+-            mountPath: /root/admin.conf
+-            subPath: admin.conf
+-          - name: logs
+-            mountPath: /mnt
+-        tty: true
+-      volumes:
+-        - name: kubeconfig
+-          configMap:
+-            name: kubeconfig
+-        - name: logs
+-          hostPath:
+-            path: /mnt/fio
+-            type: ""
+-
+BREAKS HERE
+-      fabric8.io/issue-tracker-url: "https://github.com/fabric8io/vertx-maven-plugin/issues/"
+BREAKS HERE
+-          - image: nodesource/nsolid-storage:boron-2.1.2-kubernetes
+BREAKS HERE
+-      - image: nginx:1.7.9
+BREAKS HERE
+-    - debug: var=agents
+-      failed_when: not agents is success and not agents.content=='{}'
+-      run_once: true
+-      when:
+-        - agents.content[0] != '{'
+-
+-        - result.content[0] != '{'
+BREAKS HERE
+-      resources: {}
+-        - image: ${REGISTRY}/${OPENSHIFT_PROJECT}/${SERVICE_NAME}:latest
+BREAKS HERE
+-        image: perconalab/backupjob-openshift:0.2.0
+BREAKS HERE
+-            value: litmus
+BREAKS HERE
+-  profiles: common
+BREAKS HERE
+-    annotations:
+-      fabric8.io/iconUrl: https://cdn.rawgit.com/fabric8io/fabric8-devops/master/fabric8-docker-registry/src/main/fabric8/icon.png
+-      fabric8.io/git-commit: 992c52cc2279879bb46fc47a6a27b3ad6c1ca53a
+-      fabric8.io/git-branch: stuff
+-      fabric8.io/metrics-path: dashboard/file/kubernetes-pods.json/?var-project=deployment-strategy-type-919&var-version=3.2-SNAPSHOT
+-    labels:
+-      provider: fabric8
+-      project: deployment-strategy-type-919
+-      version: 3.2-SNAPSHOT
+-      group: io.fabric8.devops.apps
+BREAKS HERE
+-  verbs: [ "create" ]
+BREAKS HERE
+-    kind.funktion.fabric8.io: Connector
+-        kind.funktion.fabric8.io: Subscription
+-            kind.funktion.fabric8.io: Subscription
+BREAKS HERE

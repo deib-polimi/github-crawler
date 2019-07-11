@@ -30,6 +30,8 @@ def load_result_file(path_to_result_file):
     return dataset
 
 def clone_repo(repo_id):
+    remote=repo_id.split("//")[1]
+    repo_id="https://bla:bla@" + remote
     logger.info("Cloning repo: " + repo_id)
     subprocess.call(["git clone " + repo_id], cwd=WORKING_DIRECTORY,  shell=True)
     logger.info("Cloned")
@@ -42,27 +44,58 @@ def remo_repo(folder_repo_id):
 
 # to execute git command from another dir: git --git-dir /home/warmik/eclipse-workspace/iac-crawler/.git log
 def get_modifying_commits_per_file(repo_folder_name, filepath):
-    keywords = ["problem", "solve", "fix", "patch", "refactor"]
+    keywords = ["problem", "solve", "fix", "patch", "refactor", "bug"]
     logger.info("Getting commits that modified file " + filepath + " in repo " + repo_folder_name)
     print(filepath)
-    p=subprocess.Popen(["git log --follow '" + filepath + "' |  egrep '[0-9a-f]{40}' -o"], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
-    out,err = p.communicate()
-    commit_list=out.split("\n")
-    logger.info("Retrieved commits: " + str(commit_list))
-    del commit_list[-1]
-    # add filtering of commits by looking keywords in the commit message
-    filtered_commit_list = []
-    for c in commit_list:
+    try:
+        p=subprocess.Popen(["git log --follow '" + filepath + "' |  egrep '[0-9a-f]{40}' -o"], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+        out,err = p.communicate()
+        commit_list=out.split("\n")
+        logger.info("Retrieved commits: " + str(commit_list))
+        del commit_list[-1]
+        # add filtering of commits by looking keywords in the commit message
+        filtered_commit_list = []
+        for c in commit_list:
+            p=subprocess.Popen(["git log --format=%B -n 1 " + c], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+            out,err = p.communicate()
+            word_idx = 0
+            commit_added = False
+            while word_idx < len(keywords) and not commit_added:
+                if keywords[word_idx] in out:
+                    filtered_commit_list.append(c)
+                    commit_added = True
+                word_idx = word_idx + 1 
+        return list(set(filtered_commit_list))
+    except OSError:
+        logger.info("error cloning " + repo_folder_name)
+        return []
+
+def get_commit_messages(repo_folder_name, commits):
+    messages = []
+    for c in commits:
         p=subprocess.Popen(["git log --format=%B -n 1 " + c], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
         out,err = p.communicate()
-        word_idx = 0
-        commit_added = False
-        while word_idx < len(keywords) and not commit_added:
-            if keywords[word_idx] in out:
-                filtered_commit_list.append(c)
-                commit_added = True
-            word_idx = word_idx + 1 
-    return filtered_commit_list
+        messages.append(out)
+    return messages
+
+def get_commits_deletion(repo_folder_name, commits, filepath):
+    deletions = []
+    for c in commits:
+        p=subprocess.Popen(["git diff " + c + "~ " + c + " " + filepath], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+        out,err = p.communicate()
+        deletion=""
+        start = False
+        for l in out.split("\n"):
+            if start:
+                if(len(l) > 0 and l[0]=='-'):
+                    if deletion=="":
+                        deletion = l
+                    else:
+                        deletion = deletion + "\n" + l
+            if not start and len(l) > 2 and l[0] == '@' and l[1] == '@':
+                start = True
+        deletions.append(deletion)
+    return deletions
 
 def worker(tasks, idx):
     while not tasks.empty():
@@ -83,19 +116,23 @@ def worker(tasks, idx):
                 filepath=r.iloc[ii]
                 if filepath is not np.nan:
                     commits=get_modifying_commits_per_file(os.path.join(WORKING_DIRECTORY, repo_folder_name), filepath)
-                    for c in commits:
-                        out_dataset=out_dataset.append({'repo_id': repo_id ,'commit': c, 'filepath': filepath}, ignore_index=True)
+                    messages=get_commit_messages(repo_folder_name, commits)
+                    deletions=get_commits_deletion(repo_folder_name, commits, filepath)
+                    for i in range(len(commits)):
+                        out_dataset=out_dataset.append({'repo_id': repo_id ,'commit': commits[i], 'message': messages[i], 'deletion': deletions[i], 'filepath': filepath}, ignore_index=True)
             remo_repo(repo_folder_name)
         out_dataset.to_csv(out_file)
 
 
 logger = logging.getLogger('crawled-post-processor')
 
+HOME="/home/warmik/eclipse-workspace"
+
 OUT_COLUMNS=["repo_id","commit","filepath"]
 
-CRAWLED_RESULTS_FOLDER="/home/warmik/eclipse-workspace/iac-crawler/results"
+CRAWLED_RESULTS_FOLDER = HOME + "/iac-crawler/results"
 
-WORKING_DIRECTORY="/home/warmik/eclipse-workspace/iac-crawler/wd"
+WORKING_DIRECTORY = HOME + "/iac-crawler/wd"
 
 onlyfiles = [f for f in listdir(CRAWLED_RESULTS_FOLDER) if isfile(join(CRAWLED_RESULTS_FOLDER, f))]
 
