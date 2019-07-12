@@ -79,6 +79,8 @@ def get_commit_messages(repo_folder_name, commits):
     return messages
 
 def get_commits_deletion(repo_folder_name, commits, filepath):
+    # currently with this approach file that are moved or re-named, while also being fixed
+    # get lost, as from the git diff they appear to be entirely new and no deletion is identified
     deletions = []
     for c in commits:
         p=subprocess.Popen(["git diff " + c + "~ " + c + " " + filepath], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
@@ -91,6 +93,9 @@ def get_commits_deletion(repo_folder_name, commits, filepath):
                     if deletion=="":
                         deletion = l
                     else:
+                        # currently "non consecutive" lines in a file that are deleted are all put together 
+                        # as a single example of buggy code coming from that file at that commit
+                        # we may think to split this into separate examples of buggy code
                         deletion = deletion + "\n" + l
             if not start and len(l) > 2 and l[0] == '@' and l[1] == '@':
                 start = True

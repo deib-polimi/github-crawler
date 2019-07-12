@@ -22,8 +22,7 @@ from sklearn.manifold import MDS
 from gensim import corpora, models, similarities 
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from sklearn.cluster import KMeans
-import simplejson as json
-import decimal
+import json 
 import logging
 
 #strip any proper nouns (NNP) or plural proper nouns (NNPS) from a text
@@ -121,129 +120,129 @@ dist = 1 - cosine_similarity(tfidf_matrix)
 
 #################### CLUSTERING
 
-logger.info("Run Kmeans clustering.")
-num_clusters = 2
-
-for k in range(2, num_clusters + 1):
-    km = KMeans(n_clusters=k)
-    
-    km.fit(tfidf_matrix)
-    
-    clusters = km.labels_.tolist()
-    
-    joblib.dump(km,  os.path.join(RESULT_FOLDER,'doc_cluster_' + k + '.pkl'))
-    km = joblib.load(os.path.join(RESULT_FOLDER,'doc_cluster_' + k + '.pkl'))
-    clusters = km.labels_.tolist()
-    
-    commit_messages = { 'commit': commits, 'rank': ranks, 'message': messages, 'cluster': clusters }
-    
-    frame = pd.DataFrame(commit_messages, index = [clusters] , columns = ['rank', 'commit', 'cluster'])
-    
-    frame['cluster'].value_counts()
-    
-    grouped = frame['rank'].groupby(frame['cluster'])
-    
-    print("Top terms per cluster:")
-    print()
-    order_centroids = km.cluster_centers_.argsort()[:, ::-1]
-    for i in range(frame.index.levels[0].size):
-        print("Cluster %d words:" % i, end='')
-        for ind in order_centroids[i, :10]:
-            if not TOKENIZE_ONLY:
-                print(' %s' % vocab_frame.ix[terms[ind].split(' ')].values.tolist()[0][0].encode('utf-8', 'ignore'), end=',')
-            else:
-                print(' %s' % terms[ind].split(' ')[0].encode('utf-8', 'ignore'), end=',')
-        print()
-        print()
-        print("Cluster %d commits:" % i, end='')
-        for commit in frame.ix[i]['commit'].values.tolist():
-            print(' %s,' % commit, end='')
-        print()
-        print()
-        
-    logger.info("Scaling down document vectors to plot clusters in 2 dimensions.")
-    MDS()
-    
-    # two components as we're plotting points in a two-dimensional plane
-    # "precomputed" because we provide a distance matrix
-    # we will also specify `random_state` so the plot is reproducible.
-    mds = MDS(n_components=2, dissimilarity="precomputed", random_state=1)
-    
-    pos = mds.fit_transform(dist)  # shape (n_components, n_samples)
-    
-    xs, ys = pos[:, 0], pos[:, 1]
-    
-    #set up colors per clusters using a dict
-    #cluster_colors = {0: '#1b9e77', 1: '#d95f02', 2: '#7570b3', 3: '#e7298a', 4: '#66a61e'}
-    
-    #create data frame that has the result of the MDS plus the cluster numbers and commits
-    df = pd.DataFrame(dict(x=xs, y=ys, label=clusters, commit=commits)) 
-    
-    #group by cluster
-    groups = df.groupby('label')
-    
-    # set up plot
-    
-    logger.info("Plotting clusters.")
-    fig, ax = plt.subplots(figsize=(17, 9)) # set size
-    ax.margins(0.05) # Optional, just adds 5% padding to the autoscaling
-    
-    #iterate through groups to layer the plot
-    #I use the cluster_name and cluster_color dicts with the 'name' lookup to return the appropriate color/label
-    for name, group in groups:
-        ax.plot(group.x, group.y, marker='o', linestyle='', ms=12, mec='none')
-        ax.set_aspect('auto')
-        ax.tick_params(\
-            axis= 'x',          # changes apply to the x-axis
-            which='both',      # both major and minor ticks are affected
-            bottom='off',      # ticks along the bottom edge are off
-            top='off',         # ticks along the top edge are off
-            labelbottom='off')
-        ax.tick_params(\
-            axis= 'y',         # changes apply to the y-axis
-            which='both',      # both major and minor ticks are affected
-            left='off',      # ticks along the bottom edge are off
-            top='off',         # ticks along the top edge are off
-            labelleft='off')
-        
-    ax.legend(numpoints=1)  #show legend with only 1 point
-    
-    #add label in x,y position with the label as the commit
-    # for i in range(len(df)):
-    #     ax.text(df.ix[i]['x'], df.ix[i]['y'], df.ix[i]['commit'], size=8)  
-    
-        
-        
-    #plt.show() #show the plot
-    
-    #uncomment the below to save the plot if need be
-    logger.info("Saving output clustering image.")
-    plt.savefig(os.path.join(RESULT_FOLDER,'clusters_small_noaxes' + k + '.png'), dpi=200)
-    
-    plt.close()
+# logger.info("Run Kmeans clustering.")
+# num_clusters = 8
+# 
+# for k in range(2, num_clusters + 1):
+#     km = KMeans(n_clusters=k)
+#     
+#     km.fit(tfidf_matrix)
+#     
+#     clusters = km.labels_.tolist()
+#     
+#     joblib.dump(km,  os.path.join(RESULT_FOLDER,'doc_cluster_' + str(k) + '.pkl'))
+#     km = joblib.load(os.path.join(RESULT_FOLDER,'doc_cluster_' + str(k) + '.pkl'))
+#     clusters = km.labels_.tolist()
+#     
+#     commit_messages = { 'commit': commits, 'rank': ranks, 'message': messages, 'cluster': clusters }
+#     
+#     frame = pd.DataFrame(commit_messages, index = [clusters] , columns = ['rank', 'commit', 'cluster'])
+#     
+#     frame['cluster'].value_counts()
+#     
+#     grouped = frame['rank'].groupby(frame['cluster'])
+#     
+#     print("Top terms per cluster:")
+#     print()
+#     order_centroids = km.cluster_centers_.argsort()[:, ::-1]
+#     for i in range(frame.index.levels[0].size):
+#         print("Cluster %d words:" % i, end='')
+#         for ind in order_centroids[i, :10]:
+#             if not TOKENIZE_ONLY:
+#                 print(' %s' % vocab_frame.ix[terms[ind].split(' ')].values.tolist()[0][0].encode('utf-8', 'ignore'), end=',')
+#             else:
+#                 print(' %s' % terms[ind].split(' ')[0].encode('utf-8', 'ignore'), end=',')
+#         print()
+#         print()
+#         print("Cluster %d commits:" % i, end='')
+#         for commit in frame.ix[i]['commit'].values.tolist():
+#             print(' %s,' % commit, end='')
+#         print()
+#         print()
+#         
+#     logger.info("Scaling down document vectors to plot clusters in 2 dimensions.")
+#     MDS()
+#     
+#     # two components as we're plotting points in a two-dimensional plane
+#     # "precomputed" because we provide a distance matrix
+#     # we will also specify `random_state` so the plot is reproducible.
+#     mds = MDS(n_components=2, dissimilarity="precomputed", random_state=1)
+#     
+#     pos = mds.fit_transform(dist)  # shape (n_components, n_samples)
+#     
+#     xs, ys = pos[:, 0], pos[:, 1]
+#     
+#     #set up colors per clusters using a dict
+#     #cluster_colors = {0: '#1b9e77', 1: '#d95f02', 2: '#7570b3', 3: '#e7298a', 4: '#66a61e'}
+#     
+#     #create data frame that has the result of the MDS plus the cluster numbers and commits
+#     df = pd.DataFrame(dict(x=xs, y=ys, label=clusters, commit=commits)) 
+#     
+#     #group by cluster
+#     groups = df.groupby('label')
+#     
+#     # set up plot
+#     
+#     logger.info("Plotting clusters.")
+#     fig, ax = plt.subplots(figsize=(17, 9)) # set size
+#     ax.margins(0.05) # Optional, just adds 5% padding to the autoscaling
+#     
+#     #iterate through groups to layer the plot
+#     #I use the cluster_name and cluster_color dicts with the 'name' lookup to return the appropriate color/label
+#     for name, group in groups:
+#         ax.plot(group.x, group.y, marker='o', linestyle='', ms=12, mec='none')
+#         ax.set_aspect('auto')
+#         ax.tick_params(\
+#             axis= 'x',          # changes apply to the x-axis
+#             which='both',      # both major and minor ticks are affected
+#             bottom='off',      # ticks along the bottom edge are off
+#             top='off',         # ticks along the top edge are off
+#             labelbottom='off')
+#         ax.tick_params(\
+#             axis= 'y',         # changes apply to the y-axis
+#             which='both',      # both major and minor ticks are affected
+#             left='off',      # ticks along the bottom edge are off
+#             top='off',         # ticks along the top edge are off
+#             labelleft='off')
+#         
+#     ax.legend(numpoints=1)  #show legend with only 1 point
+#     
+#     #add label in x,y position with the label as the commit
+#     # for i in range(len(df)):
+#     #     ax.text(df.ix[i]['x'], df.ix[i]['y'], df.ix[i]['commit'], size=8)  
+#     
+#         
+#         
+#     #plt.show() #show the plot
+#     
+#     #uncomment the below to save the plot if need be
+#     logger.info("Saving output clustering image.")
+#     plt.savefig(os.path.join(RESULT_FOLDER,'clusters_small_noaxes' + str(k) + '.png'), dpi=200)
+#     
+#     plt.close()
 
 ###################### HIERARCHICAL
 
-logger.info("Computing dendrogram (hierarchical clustering)")
-linkage_matrix = ward(dist) #define the linkage_matrix using ward clustering pre-computed distances
- 
-fig, ax = plt.subplots(figsize=(15, 20)) # set size
-ax = dendrogram(linkage_matrix, orientation="right", labels=commits);
- 
-plt.tick_params(\
-    axis= 'x',          # changes apply to the x-axis
-    which='both',      # both major and minor ticks are affected
-    bottom='off',      # ticks along the bottom edge are off
-    top='off',         # ticks along the top edge are off
-    labelbottom='off')
- 
-plt.tight_layout() #show plot with tight layout
- 
-#uncomment below to save figure
-logge.info("Saving dendrogram to file.")
-plt.savefig('ward_clusters.png', dpi=200) #save figure as ward_clusters
- 
-plt.close()
+# logger.info("Computing dendrogram (hierarchical clustering)")
+# linkage_matrix = ward(dist) #define the linkage_matrix using ward clustering pre-computed distances
+#  
+# fig, ax = plt.subplots(figsize=(15, 20)) # set size
+# ax = dendrogram(linkage_matrix, orientation="right", labels=commits);
+#  
+# plt.tick_params(\
+#     axis= 'x',          # changes apply to the x-axis
+#     which='both',      # both major and minor ticks are affected
+#     bottom='off',      # ticks along the bottom edge are off
+#     top='off',         # ticks along the top edge are off
+#     labelbottom='off')
+#  
+# plt.tight_layout() #show plot with tight layout
+#  
+# #uncomment below to save figure
+# logger.info("Saving dendrogram to file.")
+# plt.savefig(os.path.join(RESULT_FOLDER,'ward_clusters.png'), dpi=200) #save figure as ward_clusters
+#  
+# plt.close()
 
 ##################### LDA
 
@@ -267,31 +266,41 @@ class DecimalEncoder(json.JSONEncoder):
      
 #Latent Dirichlet Allocation implementation with Gensim
  
-#remove proper names
-logger.info("Running Latent Dirichlet Allocation.")
-preprocess = [strip_proppers(doc) for doc in messages]
- 
-tokenized_text = [tokenize_and_stem(text) for text in preprocess]
- 
-texts = [[word for word in text if word not in stopwords] for text in tokenized_text]
- 
-dictionary = corpora.Dictionary(texts)
- 
-dictionary.filter_extremes(no_below=1, no_above=0.8)
- 
-corpus = [dictionary.doc2bow(text) for text in texts]
- 
-len(corpus)
- 
-lda = models.LdaModel(corpus, num_topics=3, id2word=dictionary, update_every=5, chunksize=100, passes=50)
- 
-topics = lda.print_topics(3, num_words=10)
- 
-topics_matrix = lda.show_topics(formatted=False, num_words=10)
- 
-topics_out=[topics, topics_matrix]
- 
-print(topics_out)
+n_topics=8
+
+for t in range(2,n_topics + 1):
+    #remove proper names
+    logger.info("Running Latent Dirichlet Allocation for n_topics: " + str(t) + ".")
+    preprocess = [strip_proppers(doc) for doc in messages]
+    
+    if not TOKENIZE_ONLY:
+        tokenized_text = [tokenize_and_stem(text) for text in preprocess]
+    else:
+        tokenized_text = [tokenize_only(text) for text in preprocess]
+    
+    texts = [[word for word in text if word not in stopwords] for text in tokenized_text]
+     
+    dictionary = corpora.Dictionary(texts)
+     
+    dictionary.filter_extremes(no_below=1, no_above=0.8)
+     
+    corpus = [dictionary.doc2bow(text) for text in texts]
+     
+    len(corpus)
+     
+    lda = models.LdaModel(corpus, num_topics=t, id2word=dictionary, update_every=5, chunksize=100, passes=5)
+     
+    topics = lda.print_topics(t, num_words=10)
+     
+    topics_matrix = lda.show_topics(formatted=False, num_words=10)
+    for topic in topics_matrix:
+        for ii in range(len(topic[1])):
+            w=topic[1][ii]
+            w=(w[0],float(w[1]))
+            topic[1][ii] = w
+            
+    with open(os.path.join(RESULT_FOLDER,'topics_' + str(t) +'.json'), 'wb') as outfile:
+        json.dump(topics_matrix, outfile)
 
 # ##################### DOC2VEC
 # 
