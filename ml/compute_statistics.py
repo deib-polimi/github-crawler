@@ -100,7 +100,8 @@ def worker(tasks, idx, return_dict):
                                 repo_iac_files_addition_dates.append(get_date_file_addition(repo_folder_name, filepath))
                     total_repo_file_count = sum([len(files) for r, d, files in os.walk(os.path.join(WORKING_DIRECTORY, repo_folder_name))])
                     percentages_iac_files_in_repo.append((repo_iac_file_count / total_repo_file_count))
-                    date_first_iac_file_addition_in_repo.append(min(repo_iac_files_addition_dates))
+                    if(len(repo_iac_files_addition_dates > 0)):
+                        date_first_iac_file_addition_in_repo.append(min(repo_iac_files_addition_dates))
                     remo_repo(repo_folder_name)
                         
         return_dict[idx] = {"language/tool": file.split(".")[0],
