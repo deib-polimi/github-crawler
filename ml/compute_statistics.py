@@ -113,13 +113,13 @@ def worker(tasks, idx, return_dict):
                             "max_number_of_bug_commits_in_repo": commits.groupby(["repo_id"]).agg("count")["commit"].max(),
                             "min_number_of_bug_commits_in_repo": commits.groupby(["repo_id"]).agg("count")["commit"].min(),
                             "avg_number_of_loc_in_iac_file": np.mean(loc_in_files),
-                            "max_number_of_loc_in_iac_file": np.max(loc_in_files),
-                            "min_number_of_loc_in_iac_file": np.min(loc_in_files),
+                            "max_number_of_loc_in_iac_file": np.max(loc_in_files) if len(loc_in_files) > 0 else np.nan,
+                            "min_number_of_loc_in_iac_file": np.min(loc_in_files) if len(loc_in_files) > 0 else np.nan,
                             "avg_percentage_iac_files_in_repo": np.mean(percentages_iac_files_in_repo),
-                            "max_percentage_iac_files_in_repo": np.max(percentages_iac_files_in_repo),
-                            "min_percentage_iac_files_in_repo": np.min(percentages_iac_files_in_repo),
-                            "min_date_first_iac_file_addition_in_repo": min(date_first_iac_file_addition_in_repo),
-                            "max_date_first_iac_file_addition_in_repo": max(date_first_iac_file_addition_in_repo)}
+                            "max_percentage_iac_files_in_repo": np.max(percentages_iac_files_in_repo) if len(percentages_iac_files_in_repo) > 0 else np.nan,
+                            "min_percentage_iac_files_in_repo": np.min(percentages_iac_files_in_repo)  if len(percentages_iac_files_in_repo) > 0 else np.nan,
+                            "min_date_first_iac_file_addition_in_repo": min(date_first_iac_file_addition_in_repo) if len(date_first_iac_file_addition_in_repo) > 0 else np.nan,
+                            "max_date_first_iac_file_addition_in_repo": max(date_first_iac_file_addition_in_repo) if len(date_first_iac_file_addition_in_repo) > 0 else np.nan}
                     
         logger.info("Plotting distributions...")
         
