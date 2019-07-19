@@ -52,7 +52,7 @@ def remo_repo(folder_repo_id):
     
 def get_date_file_addition(folder_repo_id, file):
     logger.info("Getting date at which file " + file + " was added in tepo " + folder_repo_id)
-    p=subprocess.Popen(["git log --format=%aD " + file + " | tail -1"], cwd=os.path.join(WORKING_DIRECTORY, folder_repo_id), shell=True, stdout=PIPE)
+    p=subprocess.Popen(["git log --format=%aD " + file.replace(" ","\ ") + " | tail -1"], cwd=os.path.join(WORKING_DIRECTORY, folder_repo_id), shell=True, stdout=PIPE)
     date, _ = p.communicate()
     return parse(date)
 
@@ -103,23 +103,23 @@ def worker(tasks, idx, return_dict):
                     date_first_iac_file_addition_in_repo.append(min(repo_iac_files_addition_dates))
                     remo_repo(repo_folder_name)
                         
-                return_dict[idx] = {"language/tool": file.split(".")[0],
-                                    "number_repos_with_at_least_one_file": crawled.shape[0],
-                                    "avg_number_of__iac_files_in_repo": crawled['n_iac_files'].mean(),
-                                    "max_number_of__iac_files_in_repo": crawled['n_iac_files'].max(),
-                                    "min_number_of__iac_files_in_repo": crawled['n_iac_files'].min(),
-                                    "total_number_of_bug_commits": commits.shape[0],
-                                    "avg_number_of_bug_commits_in_repo": commits.groupby(["repo_id"]).agg("count")["commit"].mean(),
-                                    "max_number_of_bug_commits_in_repo": commits.groupby(["repo_id"]).agg("count")["commit"].max(),
-                                    "min_number_of_bug_commits_in_repo": commits.groupby(["repo_id"]).agg("count")["commit"].min(),
-                                    "avg_number_of_loc_in_iac_file": np.mean(loc_in_files),
-                                    "max_number_of_loc_in_iac_file": np.max(loc_in_files),
-                                    "min_number_of_loc_in_iac_file": np.min(loc_in_files),
-                                    "avg_percentage_iac_files_in_repo": np.mean(percentages_iac_files_in_repo),
-                                    "max_percentage_iac_files_in_repo": np.max(percentages_iac_files_in_repo),
-                                    "min_percentage_iac_files_in_repo": np.min(percentages_iac_files_in_repo),
-                                    "min_date_first_iac_file_addition_in_repo": min(date_first_iac_file_addition_in_repo),
-                                    "max_date_first_iac_file_addition_in_repo": max(date_first_iac_file_addition_in_repo)}
+        return_dict[idx] = {"language/tool": file.split(".")[0],
+                            "number_repos_with_at_least_one_file": crawled.shape[0],
+                            "avg_number_of__iac_files_in_repo": crawled['n_iac_files'].mean(),
+                            "max_number_of__iac_files_in_repo": crawled['n_iac_files'].max(),
+                            "min_number_of__iac_files_in_repo": crawled['n_iac_files'].min(),
+                            "total_number_of_bug_commits": commits.shape[0],
+                            "avg_number_of_bug_commits_in_repo": commits.groupby(["repo_id"]).agg("count")["commit"].mean(),
+                            "max_number_of_bug_commits_in_repo": commits.groupby(["repo_id"]).agg("count")["commit"].max(),
+                            "min_number_of_bug_commits_in_repo": commits.groupby(["repo_id"]).agg("count")["commit"].min(),
+                            "avg_number_of_loc_in_iac_file": np.mean(loc_in_files),
+                            "max_number_of_loc_in_iac_file": np.max(loc_in_files),
+                            "min_number_of_loc_in_iac_file": np.min(loc_in_files),
+                            "avg_percentage_iac_files_in_repo": np.mean(percentages_iac_files_in_repo),
+                            "max_percentage_iac_files_in_repo": np.max(percentages_iac_files_in_repo),
+                            "min_percentage_iac_files_in_repo": np.min(percentages_iac_files_in_repo),
+                            "min_date_first_iac_file_addition_in_repo": min(date_first_iac_file_addition_in_repo),
+                            "max_date_first_iac_file_addition_in_repo": max(date_first_iac_file_addition_in_repo)}
                     
         logger.info("Plotting distributions...")
         
