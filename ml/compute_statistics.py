@@ -219,7 +219,7 @@ OUT_COLUMNS = ["language/tool",
                 "avg_percentage_iac_files_in_repo",
                 "max_percentage_iac_files_in_repo",
                 "min_percentage_iac_files_in_repo",
-                "min_date_first_iac_file_addition_in_repo"
+                "min_date_first_iac_file_addition_in_repo",
                 "max_date_first_iac_file_addition_in_repo"]
 
 out_file = STATS_FOLDER + "/stats.csv"
