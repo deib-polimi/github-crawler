@@ -11,6 +11,7 @@ import multiprocessing
 from multiprocessing import Process, cpu_count, Queue
 import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.dates as md
 from dateutil.parser import parse
 from datetime import datetime
 
@@ -52,7 +53,11 @@ def remo_repo(folder_repo_id):
     
 def get_date_file_addition(folder_repo_id, file):
     logger.info("Getting date at which file " + file + " was added in tepo " + folder_repo_id)
-    p=subprocess.Popen(["git log --format=%aD " + file.replace(" ","\ ") + " | tail -1"], cwd=os.path.join(WORKING_DIRECTORY, folder_repo_id), shell=True, stdout=PIPE)
+    p=subprocess.Popen(["git log --format=%aD " + file
+                        .replace(" ","\ ")
+                        .replace("&", "\&")
+                        .replace(")", "\)")
+                        .replace("(", "\(") + " | tail -1"], cwd=os.path.join(WORKING_DIRECTORY, folder_repo_id), shell=True, stdout=PIPE)
     date, _ = p.communicate()
     return parse(date)
 
@@ -100,7 +105,7 @@ def worker(tasks, idx, return_dict):
                                 repo_iac_files_addition_dates.append(get_date_file_addition(repo_folder_name, filepath))
                     total_repo_file_count = sum([len(files) for r, d, files in os.walk(os.path.join(WORKING_DIRECTORY, repo_folder_name))])
                     percentages_iac_files_in_repo.append((repo_iac_file_count / total_repo_file_count))
-                    if(len(repo_iac_files_addition_dates > 0)):
+                    if(len(repo_iac_files_addition_dates) > 0):
                         date_first_iac_file_addition_in_repo.append(min(repo_iac_files_addition_dates))
                     remo_repo(repo_folder_name)
                         
@@ -165,6 +170,10 @@ def worker(tasks, idx, return_dict):
         
         # plotting distribution of the date of the first IaC file addition in a repo
         to_plot = percentages_iac_files_in_repo
+        plt.xticks( rotation=25 )
+        xfmt = md.DateFormatter('%Y-%m-%d')
+        ax=plt.gca()
+        ax.xaxis.set_major_formatter(xfmt)
         plt.hist(matplotlib.dates.date2num(date_first_iac_file_addition_in_repo), cumulative=True, density=True, bins=100, histtype='step', label='date_first_IaC_file_addition_in_repo')
         
         plt.grid(True)
