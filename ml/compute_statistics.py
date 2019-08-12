@@ -2,6 +2,7 @@ import os
 from os import listdir
 from os.path import join, isfile
 import pandas as pd
+from pandas.plotting import register_matplotlib_converters
 import re
 import logging
 import subprocess
@@ -19,6 +20,7 @@ logging.basicConfig(level=logging.INFO,
                     format='[%(asctime)s] %(levelname)s: %(name)s: %(message)s',
                     datefmt='%d-%m-%Y %H:%M:%S')
 
+register_matplotlib_converters()
 
 def load_result_file(path_to_result_file):
     # compute max number of columns in file
@@ -52,7 +54,7 @@ def remo_repo(folder_repo_id):
 
     
 def get_date_file_addition(folder_repo_id, file):
-    logger.info("Getting date at which file " + file + " was added in tepo " + folder_repo_id)
+    logger.info("Getting date at which file " + file + " was added in repo " + folder_repo_id)
     p=subprocess.Popen(["git log --format=%aD " + file
                         .replace(" ","\ ")
                         .replace("&", "\&")
@@ -61,6 +63,21 @@ def get_date_file_addition(folder_repo_id, file):
     date, _ = p.communicate()
     return parse(date)
 
+def get_date_file_last_modification(folder_repo_id, file):
+    logger.info("Getting last date at which file " + file + " was modified in repo " + folder_repo_id)
+    p=subprocess.Popen(["git log --format=%aD " + file
+                        .replace(" ","\ ")
+                        .replace("&", "\&")
+                        .replace(")", "\)")
+                        .replace("(", "\(") + " | head -1"], cwd=os.path.join(WORKING_DIRECTORY, folder_repo_id), shell=True, stdout=PIPE)
+    date, _ = p.communicate()
+    return parse(date)
+
+def get_data_first_commit(folder_repo_id):
+    logger.info("Getting date of first commit in repo " + folder_repo_id)
+    p=subprocess.Popen(["git log --reverse --format=%aD"], cwd=os.path.join(WORKING_DIRECTORY, folder_repo_id), shell=True, stdout=PIPE)
+    dates, _ = p.communicate()
+    return parse(dates.split("\n")[0])
 
 def file_len(fname):
     with open(fname) as f:
@@ -84,6 +101,8 @@ def worker(tasks, idx, return_dict):
         loc_in_files = []
         percentages_iac_files_in_repo = []
         date_first_iac_file_addition_in_repo = []
+        date_last_iac_file_modification_in_repo = []
+        diff_first_commit_first_iac_file_addition_in_repo = []
         
         for idx, r in crawled.iloc[:, :-1].iterrows():
                 repo_id = r['repo_id']
@@ -96,6 +115,7 @@ def worker(tasks, idx, return_dict):
                 if os.path.exists(os.path.join(WORKING_DIRECTORY, repo_folder_name)):
                     repo_iac_file_count = 0.0
                     repo_iac_files_addition_dates = []
+                    repo_iac_files_last_modification_dates = []
                     for ii in range(1, len(r)):
                         filepath = r.iloc[ii]
                         if filepath is not np.nan:
@@ -103,10 +123,13 @@ def worker(tasks, idx, return_dict):
                                 repo_iac_file_count = repo_iac_file_count + 1
                                 loc_in_files.append(file_len(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath)))
                                 repo_iac_files_addition_dates.append(get_date_file_addition(repo_folder_name, filepath))
+                                repo_iac_files_last_modification_dates.append(get_date_file_last_modification(repo_folder_name, filepath))
                     total_repo_file_count = sum([len(files) for r, d, files in os.walk(os.path.join(WORKING_DIRECTORY, repo_folder_name))])
                     percentages_iac_files_in_repo.append((repo_iac_file_count / total_repo_file_count))
                     if(len(repo_iac_files_addition_dates) > 0):
                         date_first_iac_file_addition_in_repo.append(min(repo_iac_files_addition_dates))
+                        date_last_iac_file_modification_in_repo.append(max(repo_iac_files_last_modification_dates))
+                        diff_first_commit_first_iac_file_addition_in_repo.append(min(repo_iac_files_addition_dates) - get_data_first_commit(repo_folder_name))
                     remo_repo(repo_folder_name)
                         
         return_dict[idx] = {"language/tool": file.split(".")[0],
@@ -125,7 +148,9 @@ def worker(tasks, idx, return_dict):
                             "max_percentage_iac_files_in_repo": np.max(percentages_iac_files_in_repo) if len(percentages_iac_files_in_repo) > 0 else np.nan,
                             "min_percentage_iac_files_in_repo": np.min(percentages_iac_files_in_repo)  if len(percentages_iac_files_in_repo) > 0 else np.nan,
                             "min_date_first_iac_file_addition_in_repo": min(date_first_iac_file_addition_in_repo) if len(date_first_iac_file_addition_in_repo) > 0 else np.nan,
-                            "max_date_first_iac_file_addition_in_repo": max(date_first_iac_file_addition_in_repo) if len(date_first_iac_file_addition_in_repo) > 0 else np.nan}
+                            "max_date_first_iac_file_addition_in_repo": max(date_first_iac_file_addition_in_repo) if len(date_first_iac_file_addition_in_repo) > 0 else np.nan,
+                            "min_date_last_iac_file_modification_in_repo": min(date_last_iac_file_modification_in_repo) if len(date_last_iac_file_modification_in_repo) > 0 else np.nan,
+                            "max_date_last_iac_file_modification_in_repo": max(date_last_iac_file_modification_in_repo) if len(date_last_iac_file_modification_in_repo) > 0 else np.nan}
                     
         logger.info("Plotting distributions...")
         
@@ -139,7 +164,7 @@ def worker(tasks, idx, return_dict):
         plt.xlabel("N-files in repo")
         plt.ylabel('Likelihood of occurrence')  
         
-        plt.savefig(os.path.join(STATS_FOLDER, file + "-n-files-in-repo-cdf.png"))
+        plt.savefig(os.path.join(STATS_FOLDER, file.split("_",1)[0] + "-n-files-in-repo-cdf.png"))
         plt.clf()
         
         # plotting distribution of LOC in IaC file
@@ -152,7 +177,7 @@ def worker(tasks, idx, return_dict):
         plt.xlabel("LOC in IaC file")
         plt.ylabel('Likelihood of occurrence')  
         
-        plt.savefig(os.path.join(STATS_FOLDER, file + "-loc-in-iac-file-cdf.png"))
+        plt.savefig(os.path.join(STATS_FOLDER, file.split("_",1)[0] + "-loc-in-iac-file-cdf.png"))
         plt.clf()
         
         # plotting distribution of percentage of IaC files in a repo
@@ -165,16 +190,17 @@ def worker(tasks, idx, return_dict):
         plt.xlabel("% IaC files in repo")
         plt.ylabel('Likelihood of occurrence')  
         
-        plt.savefig(os.path.join(STATS_FOLDER, file + "-%-iac-files-in-repo-cdf.png"))
+        plt.savefig(os.path.join(STATS_FOLDER, file.split("_",1)[0] + "-%-iac-files-in-repo-cdf.png"))
         plt.clf()
         
         # plotting distribution of the date of the first IaC file addition in a repo
-        to_plot = percentages_iac_files_in_repo
+        to_plot = date_first_iac_file_addition_in_repo
         plt.xticks( rotation=25 )
         xfmt = md.DateFormatter('%Y-%m-%d')
         ax=plt.gca()
         ax.xaxis.set_major_formatter(xfmt)
-        plt.hist(matplotlib.dates.date2num(date_first_iac_file_addition_in_repo), cumulative=True, density=True, bins=100, histtype='step', label='date_first_IaC_file_addition_in_repo')
+        ax.xaxis_date()
+        plt.hist(to_plot, cumulative=True, density=True, bins=100, histtype='step', label='date_first_IaC_file_addition_in_repo')
         
         plt.grid(True)
         ##plt.legend(loc='right')
@@ -182,7 +208,25 @@ def worker(tasks, idx, return_dict):
         plt.xlabel("date of the first IaC file addition in a repo")
         plt.ylabel('Likelihood of occurrence')  
         
-        plt.savefig(os.path.join(STATS_FOLDER, file + "-date-first-iac-file-addition-in-repo-cdf.png"))
+        plt.savefig(os.path.join(STATS_FOLDER, file.split("_",1)[0] + "-date-first-iac-file-addition-in-repo-cdf.png"))
+        plt.clf()
+        
+        # plotting distribution of the difference between the date of the first IaC file addition in a repo and the first commit in the repo
+        to_plot = diff_first_commit_first_iac_file_addition_in_repo
+        plt.xticks( rotation=25 )
+        xfmt = md.DateFormatter('%Y-%m-%d')
+        ax=plt.gca()
+        ax.xaxis.set_major_formatter(xfmt)
+        ax.xaxis_date()
+        plt.hist([x.days for x in to_plot], cumulative=True, density=True, bins=100, histtype='step', label='diff_first_commit_first_iac_file_addition_in_repo')
+        
+        plt.grid(True)
+        ##plt.legend(loc='right')
+        plt.title('CDF diff (in number of days) between date of first commit and date of first iac file addition in repo ' + file.split("_")[0].capitalize())
+        plt.xlabel("diff first commit first iac file addition in repo (n. days)")
+        plt.ylabel('Likelihood of occurrence')  
+        
+        plt.savefig(os.path.join(STATS_FOLDER, file.split("_",1)[0] + "-diff-first-commit-first-iac-file-addition-in-repo.png"))
         plt.clf()
         
         logger.info("Done with " + file)

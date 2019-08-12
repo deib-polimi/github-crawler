@@ -31,24 +31,25 @@ crawled_files = [f for f in listdir(CRAWLED_RESULTS_FOLDER) if isfile(join(CRAWL
 
 repo_lists = []
 res = {}
+tech_names = []
 
 for f in crawled_files:
     data = load_result_file(join(CRAWLED_RESULTS_FOLDER, f))
     repo_lists.append(set(data["repo_id"].get_values()))
+    tech_names.append(f.split("_",1)[0])
     
 for i in range(len(repo_lists)):
     for j in range(i+1, len(repo_lists)):
         inters = intersection(repo_lists[i], repo_lists[j])
         for k in inters:
             if k not in res:
-                res.update({k: {i,j}})
+                res.update({k: {tech_names[i],tech_names[j]}})
             else:
                 updated = res[k]
-                updated.add(i)
-                updated.add(j)
+                updated.add(tech_names[i])
+                updated.add(tech_names[j])
                 res.update({k: updated})  
                 
-print(len(res))
 
 to_plot = []
 
@@ -56,7 +57,7 @@ for k in res:
     to_plot.append(len(res[k]))    
         
 # plotting distribution of number of files in a repo
-plt.hist(to_plot, cumulative=True, density=True, bins=100, histtype='step', label='n-files')
+plt.hist(to_plot, cumulative=True, density=True, bins=12, histtype='step', label='n-files')
 
 plt.grid(True)
 #plt.legend(loc='right')
