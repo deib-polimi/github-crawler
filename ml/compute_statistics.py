@@ -214,10 +214,10 @@ def worker(tasks, idx, return_dict):
         # plotting distribution of the difference between the date of the first IaC file addition in a repo and the first commit in the repo
         to_plot = diff_first_commit_first_iac_file_addition_in_repo
         plt.xticks( rotation=25 )
-        xfmt = md.DateFormatter('%Y-%m-%d')
-        ax=plt.gca()
-        ax.xaxis.set_major_formatter(xfmt)
-        ax.xaxis_date()
+        #xfmt = md.DateFormatter('%Y-%m-%d')
+        #ax=plt.gca()
+        #ax.xaxis.set_major_formatter(xfmt)
+        #ax.xaxis_date()
         plt.hist([x.days for x in to_plot], cumulative=True, density=True, bins=100, histtype='step', label='diff_first_commit_first_iac_file_addition_in_repo')
         
         plt.grid(True)
