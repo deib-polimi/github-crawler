@@ -21,6 +21,7 @@ from nltk.tag import pos_tag
 from sklearn.manifold import MDS
 from gensim import corpora, models, similarities 
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from gensim.models import CoherenceModel
 from sklearn.cluster import KMeans
 import json 
 import logging
@@ -69,6 +70,16 @@ commits = open(os.path.join(RESULT_FOLDER,'commits.txt')).read().split('\n')
 messages = open(os.path.join(RESULT_FOLDER,'deletions-cleaned.txt')).read().split('\nBREAKS HERE\n')
     
 messages=[m.decode('utf-8') for m in messages]
+
+# clean empty commit meggases (or code snippets, when working with code clustering)
+bad_indexes = []
+
+for i in range(len(commits)):
+    if(messages[i] == ""):
+        bad_indexes.append(i)
+
+commits=list(commits[i] for i in range(len(commits)) if not i in bad_indexes)
+messages=list(messages[i] for i in range(len(messages)) if not i in bad_indexes)
 
 print(str(len(commits)) + ' commits')
 print(str(len(messages)) + ' messages')
@@ -121,7 +132,7 @@ dist = 1 - cosine_similarity(tfidf_matrix)
 #################### CLUSTERING
 
 logger.info("Run Kmeans clustering.")
-num_clusters = 8
+num_clusters = 2
  
 for k in range(2, num_clusters + 1):
     km = KMeans(n_clusters=k)
@@ -141,25 +152,31 @@ for k in range(2, num_clusters + 1):
     frame['cluster'].value_counts()
      
     grouped = frame['rank'].groupby(frame['cluster'])
-     
+    
+    clusters_words={}
+    
     print("Top terms per cluster:")
     print()
     order_centroids = km.cluster_centers_.argsort()[:, ::-1]
     for i in range(frame.index.levels[0].size):
         print("Cluster %d words:" % i, end='')
+        words = []
         for ind in order_centroids[i, :10]:
             if not TOKENIZE_ONLY:
                 print(' %s' % vocab_frame.ix[terms[ind].split(' ')].values.tolist()[0][0].encode('utf-8', 'ignore'), end=',')
+                words.append(vocab_frame.ix[terms[ind].split(' ')].values.tolist()[0][0].encode('utf-8', 'ignore'))
             else:
                 print(' %s' % terms[ind].split(' ')[0].encode('utf-8', 'ignore'), end=',')
-        print()
-        print()
-        print("Cluster %d commits:" % i, end='')
-        for commit in frame.ix[i]['commit'].values.tolist():
-            print(' %s,' % commit, end='')
-        print()
-        print()
+                words.append(terms[ind].split(' ')[0].encode('utf-8', 'ignore'))
+        clusters_words.update({i: words})
          
+    # dump clusters words to file
+    with open(os.path.join(RESULT_FOLDER,'clusters-words-' + str(k) +'.json'), 'wb') as outfile:
+        json.dump(clusters_words, outfile)
+
+    # dumping assignment of commits to clusters
+    frame.set_index("rank").to_csv("/home/warmik/eclipse-workspace/iac-crawler/ml/ansible-results/commits-clustering.csv", index= False)
+    
     logger.info("Scaling down document vectors to plot clusters in 2 dimensions.")
     MDS()
      
@@ -266,7 +283,8 @@ class DecimalEncoder(json.JSONEncoder):
      
 #Latent Dirichlet Allocation implementation with Gensim
  
-n_topics=8
+# to tune number of topics
+n_topics=2
 
 for t in range(2,n_topics + 1):
     #remove proper names
@@ -290,7 +308,8 @@ for t in range(2,n_topics + 1):
      
     lda = models.LdaModel(corpus, num_topics=t, id2word=dictionary, update_every=5, chunksize=100, passes=5)
      
-    topics = lda.print_topics(t, num_words=10)
+    # to tune number of words per topics
+    topics = lda.print_topics(t, num_words=3)
      
     topics_matrix = lda.show_topics(formatted=False, num_words=10)
     for topic in topics_matrix:
@@ -299,8 +318,23 @@ for t in range(2,n_topics + 1):
             w=(w[0],float(w[1]))
             topic[1][ii] = w
             
+    # compute model perplexity and coherence score to evaluate goodness of identified topics        
+    # Compute Perplexity (lower the better)
+    perplexity = lda.log_perplexity(corpus)
+    
+    # Compute Coherence Score (higher the better)
+    coherence_model_lda = CoherenceModel(model=lda, texts=texts, dictionary=dictionary, coherence='c_v')
+    coherence = coherence_model_lda.get_coherence()
+
+    output = {}
+    output.update({"topics_matrix": topics_matrix})
+    output.update({"perplexity": perplexity})
+    output.update({"coherence": coherence})
+                
+                
     with open(os.path.join(RESULT_FOLDER,'topics_' + str(t) +'.json'), 'wb') as outfile:
-        json.dump(topics_matrix, outfile)
+        json.dump(output, outfile)
+        
 
 # ##################### DOC2VEC
 # 
