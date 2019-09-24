@@ -138,6 +138,9 @@ def worker(tasks, idx):
                             # in which case the file pre commit has not been copied yet (and of course the file post commit has not been copied too)
                             # so nothing needs to be done
                             continue
+                    # checkout back to master from WORKING_DIRECTORY + "repo_folder_name"
+                    p=subprocess.Popen(["git checkout master"], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+
 
             remo_repo(repo_folder_name)
         out_dataset.to_csv(out_file)
@@ -155,10 +158,9 @@ def empty_folder(folder):
 def copy_file_at_commit(repo_folder_name, filepath, commit, dest, pre_commit = False):
     # checkout "commit" from WORKING_DIRECTORY + "repo_folder_name"
     p=subprocess.Popen(["git checkout " + commit + "^" if pre_commit else ""], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+    out,err = p.communicate()
     # copy "repo_folder_name" + "filepath" to "dest"    
-    shutil.copy(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath), dest)
-    # checkout master from WORKING_DIRECTORY + "repo_folder_name"
-    p=subprocess.Popen(["git checkout master"], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+    shutil.copy(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath), os.path.join(dest, commit + "-" + filepath.rsplit("/",1)[-1]))
 
 logger = logging.getLogger('crawled-post-processor')
 
