@@ -1,4 +1,5 @@
 import os
+import shutil
 from os import listdir
 from os.path import join, isfile
 import pandas as pd 
@@ -8,6 +9,7 @@ import numpy as np
 import logging
 import re
 from multiprocessing import Process, cpu_count, Queue
+from ansible.modules.cloud.amazon.route53 import commit
 
 logging.basicConfig(level=logging.INFO,
                     format='[%(asctime)s] %(levelname)s: %(name)s: %(message)s',
@@ -79,6 +81,8 @@ def get_commit_messages(repo_folder_name, commits):
     return messages
 
 def get_commits_deletion(repo_folder_name, commits, filepath):
+    # currently with this approach file that are moved or re-named, while also being fixed
+    # get lost, as from the git diff they appear to be entirely new and no deletion is identified
     deletions = []
     for c in commits:
         p=subprocess.Popen(["git diff " + c + "~ " + c + " " + filepath], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
@@ -91,6 +95,9 @@ def get_commits_deletion(repo_folder_name, commits, filepath):
                     if deletion=="":
                         deletion = l
                     else:
+                        # currently "non consecutive" lines in a file that are deleted are all put together 
+                        # as a single example of buggy code coming from that file at that commit
+                        # we may think to split this into separate examples of buggy code
                         deletion = deletion + "\n" + l
             if not start and len(l) > 2 and l[0] == '@' and l[1] == '@':
                 start = True
@@ -118,11 +125,42 @@ def worker(tasks, idx):
                     commits=get_modifying_commits_per_file(os.path.join(WORKING_DIRECTORY, repo_folder_name), filepath)
                     messages=get_commit_messages(repo_folder_name, commits)
                     deletions=get_commits_deletion(repo_folder_name, commits, filepath)
-                    for i in range(len(commits)):
-                        out_dataset=out_dataset.append({'repo_id': repo_id ,'commit': commits[i], 'message': messages[i], 'deletion': deletions[i], 'filepath': filepath}, ignore_index=True)
+                    for c in range(len(commits)):
+                        out_dataset=out_dataset.append({'repo_id': repo_id ,'commit': commits[c], 'message': messages[c], 'deletion': deletions[c], 'filepath': filepath}, ignore_index=True)
+                        # TODO: here for each commit that fixes the file we should extract a copy of the file before and after the commit to then run the ansible linter
+                        # copy version of "filepath" before commit "i" into folder "pre_patch_files"
+                        try:
+                            copy_file_at_commit(repo_folder_name, filepath, commits[c], PRE_PATCH_FILES, True)
+                            # copy version of "filepath" after commit "i" into folder "post_patch_files"
+                            copy_file_at_commit(repo_folder_name, filepath, commits[c] ,POST_PATCH_FILES)
+                        except IOError:
+                            # this should only happen when the file pre commit has a different name from that post commit
+                            # in which case the file pre commit has not been copied yet (and of course the file post commit has not been copied too)
+                            # so nothing needs to be done
+                            continue
+                    # checkout back to master from WORKING_DIRECTORY + "repo_folder_name"
+                    p=subprocess.Popen(["git checkout master"], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+
+
             remo_repo(repo_folder_name)
         out_dataset.to_csv(out_file)
 
+def empty_folder(folder):
+    for f in os.listdir(folder):
+        file_path = os.path.join(folder, f)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path): shutil.rmtree(file_path)
+        except Exception as e:
+            logger.error(e)
+            
+def copy_file_at_commit(repo_folder_name, filepath, commit, dest, pre_commit = False):
+    # checkout "commit" from WORKING_DIRECTORY + "repo_folder_name"
+    p=subprocess.Popen(["git checkout " + commit + "^" if pre_commit else ""], cwd=os.path.join(WORKING_DIRECTORY, repo_folder_name), shell=True, stdout=PIPE)
+    out,err = p.communicate()
+    # copy "repo_folder_name" + "filepath" to "dest"    
+    shutil.copy(os.path.join(WORKING_DIRECTORY, repo_folder_name, filepath), os.path.join(dest, commit + "-" + filepath.rsplit("/",1)[-1]))
 
 logger = logging.getLogger('crawled-post-processor')
 
@@ -130,9 +168,18 @@ HOME="/home/warmik/eclipse-workspace"
 
 OUT_COLUMNS=["repo_id","commit","filepath"]
 
-CRAWLED_RESULTS_FOLDER = HOME + "/iac-crawler/results"
+CRAWLED_RESULTS_FOLDER = os.path.join(HOME,"iac-crawler/results")
 
-WORKING_DIRECTORY = HOME + "/iac-crawler/wd"
+WORKING_DIRECTORY = os.path.join(HOME,"iac-crawler/wd")
+
+# create WORKING_DIRECTORY if not exists
+if not os.path.exists(WORKING_DIRECTORY):
+    os.mkdir(WORKING_DIRECTORY)
+    logger.info("Directory " + WORKING_DIRECTORY +  " created ")
+else:    
+    # empty folder WORKING_DIRECTORY if it exists
+    logger.info("Directory " + WORKING_DIRECTORY +  " already exists. Emptying...")
+    empty_folder(WORKING_DIRECTORY)
 
 onlyfiles = [f for f in listdir(CRAWLED_RESULTS_FOLDER) if isfile(join(CRAWLED_RESULTS_FOLDER, f))]
 
@@ -143,6 +190,28 @@ for file in onlyfiles:
     tasks.put(file)
 
 jobs = []
+
+PRE_PATCH_FILES = os.path.join(HOME,"iac-crawler/pre_patch_files")
+POST_PATCH_FILES = os.path.join(HOME,"iac-crawler/post_patch_files")
+
+# create folder PRE_PATCH_FILES if it does not exist
+if not os.path.exists(PRE_PATCH_FILES):
+    os.mkdir(PRE_PATCH_FILES)
+    logger.info("Directory " + PRE_PATCH_FILES +  " created ")
+else:    
+    # empty folder PRE_PATCH_FILES if it exists
+    logger.info("Directory " + PRE_PATCH_FILES +  " already exists. Emptying...")
+    empty_folder(PRE_PATCH_FILES)
+
+# create folder POST_PATCH_FILES if it does not exist
+if not os.path.exists(POST_PATCH_FILES):
+    os.mkdir(POST_PATCH_FILES)
+    logger.info("Directory " + POST_PATCH_FILES +  " created ")
+else:    
+    # empty folder POST_PATCH_FILES if it exists
+    logger.info("Directory " + POST_PATCH_FILES +  " already exists. Emptying...")
+    empty_folder(POST_PATCH_FILES)
+
 
 logger.info('Starting workers')
 for i in range(n_procs):
