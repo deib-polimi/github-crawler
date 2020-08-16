@@ -1,5 +1,6 @@
 from crawler import Crawler
 
+
 class CrawlerRepo(Crawler):
     def search(self, search):
         self.__search__(search)
@@ -9,7 +10,8 @@ class CrawlerRepo(Crawler):
         res[repo] = []
 
     def executeQuery(self, query):
-        return self.github.search_repositories(query, sort='stars', order='desc')
+        return self.github.search_repositories(query)
+
 
 class CrawlerCode(Crawler):
     def search(self, search):
@@ -23,6 +25,7 @@ class CrawlerCode(Crawler):
 
     def executeQuery(self, query):
         return self.github.search_code(query)
+
 
 class CrawlerCodeRepo(Crawler):
     def search(self, search):

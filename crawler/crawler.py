@@ -40,7 +40,7 @@ class Crawler:
                 continue
             except Exception as e:
                 print(e)
-                #something bad happened return the current result
+                # something bad happened return the current result
                 break
             r += 1
         self.__writeToFile__(search.name, res)
@@ -72,8 +72,9 @@ class Crawler:
         self.__wait__()
 
     def __wait__(self):
-        n = randint(0, 2**self.fails - 1) # exponential backoff
-        n = min(max(1, n), self.maxSlots) # at least wait one slot, or max maxWait
+        n = randint(0, 2**self.fails - 1)  # exponential backoff
+        # at least wait one slot, or max maxWait
+        n = min(max(1, n), self.maxSlots)
         wait = n*self.slot
         if n > 1:
             print("waiting %.1f seconds..." % wait)
@@ -84,7 +85,7 @@ class Crawler:
         for url, files in res.items():
             data = [url] + list(files)
             output += ",".join(data) + "\n"
-        f = open(self.__getPath__(name), "a")
+        f = open(self.__getPath__(name), "w")
         f.write(output)
 
     def __checkFileExists__(self, name):
