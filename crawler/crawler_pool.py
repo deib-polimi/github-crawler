@@ -25,10 +25,14 @@ class CrawlerPool:
             t.join()
 
     def work(self, token):
+        try:
         crawler = self.crawlertype(token)
         while True:
             item = self.searches.get()
             if item is None:
                 break
-            crawler.search(item)
+            try:
+                crawler.search(item)
+            except Exception as e:
+                print(e)
             self.searches.task_done()
