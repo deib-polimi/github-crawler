@@ -25,7 +25,6 @@ class CrawlerPool:
             t.join()
 
     def work(self, token):
-        try:
         crawler = self.crawlertype(token)
         while True:
             item = self.searches.get()
