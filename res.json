@@ -1,0 +1,9 @@
+[
+{"repo": "https://github.com/tetsuuu/default-infra", "file": "iam_policy.tf", "stars": 0},
+{"repo": "https://github.com/adalbabr/codes", "file": "terraform/azure/functions.tf", "stars": 0},
+{"repo": "https://github.com/gustajz/azure-provisioning", "file": "terraform/main.tf", "stars": 1},
+{"repo": "https://github.com/sethetter/episodic", "file": "ops/apig.tf", "stars": 1},
+{"repo": "https://github.com/jirojo2/cdh-cloud", "file": "terraform/pip_nic.tf", "stars": 0},
+{"repo": "https://github.com/arvindgorur/terraform-azure", "file": "main.tf", "stars": 0},
+{"repo": "https://github.com/karlarr/azure-quickstart-templates", "file": "devopstools-jenkins-chefhabitat-terraform/Terraform/APP/Azure_APP.tf", "stars": 0}
+]
