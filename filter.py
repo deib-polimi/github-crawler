@@ -2,18 +2,31 @@ from github import Github
 import csv
 from time import sleep
 import datetime
+import argparse
 
-token = '9f35bc1eb979963e252d5a1651f17a2656cdca0d'
-g = Github(token)
+f = open("tokens.txt", "r")
+tokens = f.read().splitlines()
+g = Github(tokens[0])
 
-stars = 10
-date = '2020-07-01'
+parser = argparse.ArgumentParser()
+parser.add_argument("-s", dest='stars', type=int, help="Minimum number of stars", default=10)
+parser.add_argument("-c", dest='date', type=str, help="Latest commit after this date, Y-m-d format", default="2021-10-01")
+parser.add_argument("-i", dest='input', type=str, help="Input file (CSV)", required=True)
+parser.add_argument("-o", dest='output', type=str, help="Output file (CSV)", required=True)
+args = parser.parse_args()
+
+stars = args.stars
+date = args.date
+input_file = args.input
+output_file = args.output
+
 date = datetime.datetime.strptime(date, '%Y-%m-%d')
 res = []
 i = 0
-with open('filtered1.csv', mode='a', newline='') as csv_file:
+filtered_count = 0
+with open(output_file, mode='a', newline='') as csv_file:
     writer = csv.writer(csv_file, delimiter=';')
-    with open('filtered1-june.csv', newline='') as f:
+    with open(input_file, newline='') as f:
         reader = csv.reader(f, delimiter=',')
         while True:
             i += 1
@@ -24,6 +37,7 @@ with open('filtered1.csv', mode='a', newline='') as csv_file:
                 val = g.get_repo(repo)
                 print(i, val.stargazers_count, val.updated_at)
                 if val.stargazers_count > stars and val.updated_at >= date:
+                    filtered_count += 1
                     writer.writerow([f'git://github.com/{repo}.git'])
                 sleep(0.1)
             except UnicodeDecodeError as e:
@@ -35,6 +49,7 @@ with open('filtered1.csv', mode='a', newline='') as csv_file:
                 print(repo)
                 continue
 
+print("Total filtered repos", filtered_count)
 
 
 
