@@ -24,6 +24,8 @@ class Crawler:
         print(query)
         results, total = self.__getQueryResults__(query)
         print(search.name, total)
+        if total > 1000:
+            print("WARNING the number of total results exceed the GitHub limit. Please use a different filter")
         r = 0
         while r < total:
             print(search.name, 'processing result', r+1)
