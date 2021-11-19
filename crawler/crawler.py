@@ -10,7 +10,7 @@ DEFAULT_PATH = os.path.join(os.getcwd(), "results")
 
 
 class Crawler:
-    def __init__(self, token, slot=0.1, maxWait=25, path=DEFAULT_PATH):
+    def __init__(self, token, slot=5, maxWait=25, path=DEFAULT_PATH):
         self.token = token
         self.github = Github(token)
         self.fails = 0
