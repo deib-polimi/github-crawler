@@ -35,8 +35,8 @@ with open(output_file, mode='a', newline='') as csv_file:
                 repo = line[0]
                 repo = '/'.join(repo.split('/')[-2:]).split('.')[0]
                 val = g.get_repo(repo)
-                print(i, val.stargazers_count, val.updated_at)
-                if val.stargazers_count > stars and val.updated_at >= date:
+                print(i, val.stargazers_count, val.pushed_at)
+                if val.stargazers_count > stars and val.pushed_at >= date:
                     filtered_count += 1
                     writer.writerow([f'git://github.com/{repo}.git'])
                 sleep(0.1)
